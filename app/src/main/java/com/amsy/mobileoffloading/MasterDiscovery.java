@@ -65,6 +65,7 @@ public class MasterDiscovery extends AppCompatActivity {
                 connectedDevices.add(connectedDevice);
                 connectedDevicesAdapter.notifyItemChanged(connectedDevices.size() - 1);
 
+
 //                NearbyConnectionsManager.getInstance(getApplicationContext()).requestConnection(endpointId, "MASTER");
             }
 
