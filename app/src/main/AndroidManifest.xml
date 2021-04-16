@@ -15,7 +15,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.MobileOffloading">
-        <activity android:name=".ClientAdvertisement" />
+        <activity android:name=".WorkerAdvertisement" />
         <activity android:name=".MasterDiscovery" />
         <activity android:name=".MainActivity">
             <intent-filter>

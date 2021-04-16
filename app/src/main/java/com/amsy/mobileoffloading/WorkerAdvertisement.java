@@ -1,5 +1,6 @@
 package com.amsy.mobileoffloading;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Build;
@@ -7,19 +8,24 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.google.android.gms.nearby.Nearby;
 import com.google.android.gms.nearby.connection.ConnectionInfo;
 import com.google.android.gms.nearby.connection.ConnectionLifecycleCallback;
 import com.google.android.gms.nearby.connection.ConnectionResolution;
+import com.google.android.gms.nearby.connection.Payload;
+import com.google.android.gms.nearby.connection.PayloadCallback;
+import com.google.android.gms.nearby.connection.PayloadTransferUpdate;
 
 public class WorkerAdvertisement extends AppCompatActivity {
     private  Advertiser advertiser;
     private String workerId;
     private String masterId;
     private ConnectionLifecycleCallback connectionListener;
+    private PayloadCallback payloadCallback;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_client_advertisement);
+        setContentView(R.layout.activity_worker_advertisement);
         advertiser = new Advertiser(this.getApplicationContext());
         workerId =  Build.MANUFACTURER + " " + Build.MODEL;
         setCallback();
@@ -33,7 +39,6 @@ public class WorkerAdvertisement extends AppCompatActivity {
                 Log.d("WORKER", id);
                 Log.d("WORKER", connectionInfo.getEndpointName() + " " + connectionInfo.getAuthenticationToken());
                 masterId = id;
-//                connectionRequestDialog.show();
             }
 
             @Override
@@ -50,6 +55,22 @@ public class WorkerAdvertisement extends AppCompatActivity {
                 Toast.makeText(WorkerAdvertisement.this, "Disconnected", Toast.LENGTH_SHORT).show();
             }
         };
+        payloadCallback = new PayloadCallback() {
+            @Override
+            public void onPayloadReceived(@NonNull String endpointId, @NonNull Payload payload) {
+                Log.d("WORKER", "Payload Received");
+            }
+
+            @Override
+            public void onPayloadTransferUpdate(@NonNull String endpointId, @NonNull PayloadTransferUpdate payloadTransferUpdate) {
+                Log.d("WORKER", "Payload Transferring...");
+            }
+        };
+    }
+
+    void acceptConnection() {
+        Nearby.getConnectionsClient(this.getApplicationContext()).acceptConnection(masterId, payloadCallback);
+        advertiser.stop();
     }
 
     @Override

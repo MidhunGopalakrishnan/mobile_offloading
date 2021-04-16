@@ -76,7 +76,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onClickSlave(View view) {
-        Intent intent = new Intent(getApplicationContext(), ClientAdvertisement.class);
+        Intent intent = new Intent(getApplicationContext(), WorkerAdvertisement.class);
         startActivity(intent);
     }
 }
