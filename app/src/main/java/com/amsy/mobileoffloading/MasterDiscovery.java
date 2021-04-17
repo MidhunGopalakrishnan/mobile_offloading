@@ -13,6 +13,8 @@ import com.amsy.mobileoffloading.adapters.ConnectedDevicesAdapter;
 import com.amsy.mobileoffloading.entities.ConnectedDevice;
 import com.amsy.mobileoffloading.entities.DeviceStatistics;
 import com.amsy.mobileoffloading.helper.Constants;
+import com.amsy.mobileoffloading.services.MasterDiscoveryService;
+import com.amsy.mobileoffloading.services.NearbyConnectionsManager;
 import com.google.android.gms.nearby.connection.DiscoveredEndpointInfo;
 import com.google.android.gms.nearby.connection.EndpointDiscoveryCallback;
 
@@ -26,6 +28,8 @@ public class MasterDiscovery extends AppCompatActivity {
 
     private ConnectedDevicesAdapter connectedDevicesAdapter;
     private List<ConnectedDevice> connectedDevices = new ArrayList<>();
+
+    private MasterDiscoveryService masterDiscoveryService;
 
 
     @Override
@@ -66,7 +70,7 @@ public class MasterDiscovery extends AppCompatActivity {
                 connectedDevicesAdapter.notifyItemChanged(connectedDevices.size() - 1);
 
 
-//                NearbyConnectionsManager.getInstance(getApplicationContext()).requestConnection(endpointId, "MASTER");
+                NearbyConnectionsManager.getInstance(getApplicationContext()).requestConnection(endpointId, "MASTER");
             }
 
             @Override
@@ -78,8 +82,8 @@ public class MasterDiscovery extends AppCompatActivity {
             }
         };
 
-//        clientDiscovery = new ClientDiscovery(this);
-//        clientDiscovery.start(endpointDiscoveryCallback);
+        masterDiscoveryService = new MasterDiscoveryService(this);
+        masterDiscoveryService.start(endpointDiscoveryCallback);
     }
 
     private void removeConnectedDevice(String endpointId) {
