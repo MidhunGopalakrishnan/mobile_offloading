@@ -1,4 +1,4 @@
-package com.amsy.mobileoffloading;
+package com.amsy.mobileoffloading.services;
 
 import android.content.Context;
 import android.util.Log;
@@ -23,7 +23,6 @@ public class Advertiser {
                 .startAdvertising(workerId, context.getPackageName(), connCallback, advtOptions)
                 .addOnSuccessListener((unused) -> {
                     Log.d("WORKER", "Advertising to other devices");
-                    Log.d("WORKER", unused + "");
                 })
                 .addOnFailureListener((Exception e) -> {
                     Log.d("WORKER", "Advertising Failed");
