@@ -10,15 +10,17 @@ public class ClientPayLoad implements Serializable {
         return tag;
     }
 
-    public void setTag(String tag) {
+    public ClientPayLoad setTag(String tag) {
         this.tag = tag;
+        return this;
     }
 
     public Object getData() {
         return data;
     }
 
-    public void setData(Object data) {
+    public ClientPayLoad setData(Object data) {
         this.data = data;
+        return this;
     }
 }

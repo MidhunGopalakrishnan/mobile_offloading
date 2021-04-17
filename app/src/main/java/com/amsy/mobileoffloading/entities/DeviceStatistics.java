@@ -1,5 +1,7 @@
 package com.amsy.mobileoffloading.entities;
 
+import android.location.Location;
+
 import java.io.Serializable;
 
 public class DeviceStatistics implements Serializable {
@@ -59,5 +61,15 @@ public class DeviceStatistics implements Serializable {
 
     public void setTotalCapacity(int totalCapacity) {
         this.totalCapacity = totalCapacity;
+    }
+
+    public void setLocation(Location loc) {
+        if(loc != null) {
+            this.latitude = loc.getLatitude();
+            this.longitude = loc.getLongitude();
+            this.locationValid = true;
+        } else {
+            this.locationValid = false;
+        }
     }
 }

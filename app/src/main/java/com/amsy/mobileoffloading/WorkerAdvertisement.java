@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.Dialog;
+import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
@@ -13,6 +14,7 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.amsy.mobileoffloading.helper.Constants;
 import com.amsy.mobileoffloading.services.Advertiser;
 import com.google.android.gms.nearby.Nearby;
 import com.google.android.gms.nearby.connection.ConnectionInfo;
@@ -44,7 +46,7 @@ public class WorkerAdvertisement extends AppCompatActivity {
                 Log.d("WORKER", id);
                 Log.d("WORKER", connectionInfo.getEndpointName() + " " + connectionInfo.getAuthenticationToken());
                 masterId = id;
-                showDialog();
+                showDialog(connectionInfo.getEndpointName());
             }
 
             @Override
@@ -56,7 +58,7 @@ public class WorkerAdvertisement extends AppCompatActivity {
 
             @Override
             public void onDisconnected(String id) {
-                Log.d("WORKER", "DISCONNECTED");
+                Log.d("WORKER", "Disconnected");
                 Log.d("WORKER", id);
                 Toast.makeText(WorkerAdvertisement.this, "Disconnected", Toast.LENGTH_SHORT).show();
             }
@@ -78,22 +80,12 @@ public class WorkerAdvertisement extends AppCompatActivity {
         confirmationDialog = new Dialog(this);
         confirmationDialog.setContentView(R.layout.confirmation_dialog);
         confirmationDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        confirmationDialog.findViewById(R.id.accept).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                acceptConnection();
-            }
-        });
-        confirmationDialog.findViewById(R.id.reject).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                rejectConnection();
-            }
-        });;
+        confirmationDialog.findViewById(R.id.accept).setOnClickListener(v -> acceptConnection());
+        confirmationDialog.findViewById(R.id.reject).setOnClickListener(v -> rejectConnection());;
     }
-    void showDialog() {
+    void showDialog(String masterInfo) {
        TextView title =  confirmationDialog.findViewById(R.id.dialogText);
-        title.setText("Master is trying to connect. Do you accept the connection ?");
+        title.setText(String.format("Master(%s) is trying to connect. Do you accept the connection ?", masterInfo));
         confirmationDialog.show();
     }
 
@@ -101,6 +93,7 @@ public class WorkerAdvertisement extends AppCompatActivity {
         Nearby.getConnectionsClient(this.getApplicationContext()).acceptConnection(masterId, payloadCallback);
         advertiser.stop();
         confirmationDialog.dismiss();
+        startWorkerComputation();
     }
     void rejectConnection() {
         Nearby.getConnectionsClient(this.getApplicationContext()).rejectConnection(masterId);
@@ -119,8 +112,17 @@ public class WorkerAdvertisement extends AppCompatActivity {
         advertiser.stop();
     }
 
-    public void onTestDialog(View view) {
-        masterId = "SAMSUNG M30s";
-        showDialog();
+    private void startWorkerComputation() {
+        Intent intent = new Intent(getApplicationContext(), WorkerComputation.class);
+        Bundle bundle = new Bundle();
+        bundle.putString(Constants.MASTER_ENDPOINT_ID, masterId);
+        intent.putExtras(bundle);
+        startActivity(intent);
+        finish();
+    }
+
+
+    public void simulate(View view) {
+        startWorkerComputation();
     }
 }
