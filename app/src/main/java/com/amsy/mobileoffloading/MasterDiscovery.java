@@ -89,6 +89,7 @@ public class MasterDiscovery extends AppCompatActivity {
                 }
             }
 
+
             @Override
             public void onPayloadTransferUpdate(@NonNull String endpointId, @NonNull PayloadTransferUpdate payloadTransferUpdate) {
 
