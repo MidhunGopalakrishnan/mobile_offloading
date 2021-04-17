@@ -13,6 +13,7 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.amsy.mobileoffloading.services.Advertiser;
 import com.google.android.gms.nearby.Nearby;
 import com.google.android.gms.nearby.connection.ConnectionInfo;
 import com.google.android.gms.nearby.connection.ConnectionLifecycleCallback;
@@ -22,7 +23,7 @@ import com.google.android.gms.nearby.connection.PayloadCallback;
 import com.google.android.gms.nearby.connection.PayloadTransferUpdate;
 
 public class WorkerAdvertisement extends AppCompatActivity {
-    private  Advertiser advertiser;
+    private Advertiser advertiser;
     private String workerId;
     private String masterId;
     private ConnectionLifecycleCallback connectionListener;

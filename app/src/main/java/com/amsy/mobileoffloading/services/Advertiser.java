@@ -1,4 +1,4 @@
-package com.amsy.mobileoffloading;
+package com.amsy.mobileoffloading.services;
 
 import android.content.Context;
 import android.util.Log;
