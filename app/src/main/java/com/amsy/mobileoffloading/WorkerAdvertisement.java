@@ -121,7 +121,6 @@ public class WorkerAdvertisement extends AppCompatActivity {
         finish();
     }
 
-
     public void simulate(View view) {
         startWorkerComputation();
     }
