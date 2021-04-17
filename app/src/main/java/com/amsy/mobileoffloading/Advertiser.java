@@ -23,7 +23,6 @@ public class Advertiser {
                 .startAdvertising(workerId, context.getPackageName(), connCallback, advtOptions)
                 .addOnSuccessListener((unused) -> {
                     Log.d("WORKER", "Advertising to other devices");
-                    Log.d("WORKER", unused + "");
                 })
                 .addOnFailureListener((Exception e) -> {
                     Log.d("WORKER", "Advertising Failed");

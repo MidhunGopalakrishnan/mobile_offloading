@@ -3,9 +3,14 @@ package com.amsy.mobileoffloading;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.Dialog;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.nearby.Nearby;
@@ -22,16 +27,15 @@ public class WorkerAdvertisement extends AppCompatActivity {
     private String masterId;
     private ConnectionLifecycleCallback connectionListener;
     private PayloadCallback payloadCallback;
+    private Dialog confirmationDialog;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_worker_advertisement);
+        initialiseDialog();
         advertiser = new Advertiser(this.getApplicationContext());
         workerId =  Build.MANUFACTURER + " " + Build.MODEL;
-        setCallback();
-    }
 
-    void setCallback() {
         connectionListener = new ConnectionLifecycleCallback() {
             @Override
             public void onConnectionInitiated(String id, ConnectionInfo connectionInfo) {
@@ -39,6 +43,7 @@ public class WorkerAdvertisement extends AppCompatActivity {
                 Log.d("WORKER", id);
                 Log.d("WORKER", connectionInfo.getEndpointName() + " " + connectionInfo.getAuthenticationToken());
                 masterId = id;
+                showDialog();
             }
 
             @Override
@@ -68,9 +73,37 @@ public class WorkerAdvertisement extends AppCompatActivity {
         };
     }
 
+    void initialiseDialog() {
+        confirmationDialog = new Dialog(this);
+        confirmationDialog.setContentView(R.layout.confirmation_dialog);
+        confirmationDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        confirmationDialog.findViewById(R.id.accept).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                acceptConnection();
+            }
+        });
+        confirmationDialog.findViewById(R.id.reject).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                rejectConnection();
+            }
+        });;
+    }
+    void showDialog() {
+       TextView title =  confirmationDialog.findViewById(R.id.dialogText);
+        title.setText("Master is trying to connect. Do you accept the connection ?");
+        confirmationDialog.show();
+    }
+
     void acceptConnection() {
         Nearby.getConnectionsClient(this.getApplicationContext()).acceptConnection(masterId, payloadCallback);
         advertiser.stop();
+        confirmationDialog.dismiss();
+    }
+    void rejectConnection() {
+        Nearby.getConnectionsClient(this.getApplicationContext()).rejectConnection(masterId);
+        confirmationDialog.dismiss();
     }
 
     @Override
@@ -83,5 +116,10 @@ public class WorkerAdvertisement extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
         advertiser.stop();
+    }
+
+    public void onTestDialog(View view) {
+        masterId = "SAMSUNG M30s";
+        showDialog();
     }
 }
