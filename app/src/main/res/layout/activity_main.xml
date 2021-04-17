@@ -5,14 +5,15 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".MainActivity">
+
     <TextView
         android:id="@+id/question"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="200dp"
+        android:layout_width="349dp"
+        android:layout_height="28dp"
+        android:layout_marginTop="220dp"
+        android:text="Which mode would you like to work?"
         android:textSize="20dp"
         android:textStyle="bold"
-        android:text="Which mode would you like to work?"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
