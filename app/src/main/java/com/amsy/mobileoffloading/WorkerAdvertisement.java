@@ -143,7 +143,7 @@ public class WorkerAdvertisement extends AppCompatActivity {
     }
     void showDialog(String masterInfo) {
        TextView title =  confirmationDialog.findViewById(R.id.dialogText);
-        title.setText(String.format("Master(%s) is trying to connect. Do you accept the connection ?", masterInfo));
+        title.setText(String.format("%s is trying to connect. Do you accept the connection ?", masterInfo));
         confirmationDialog.show();
     }
 
