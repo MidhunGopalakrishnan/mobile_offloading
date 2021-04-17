@@ -28,6 +28,7 @@ public class Advertiser {
                 })
                 .addOnFailureListener((Exception e) -> {
                     Log.d("WORKER", "Advertising Failed");
+                    text.setText("Failed..");
                     e.printStackTrace();
                 });
     }

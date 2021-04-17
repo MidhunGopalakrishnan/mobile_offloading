@@ -112,10 +112,17 @@ public class WorkerAdvertisement extends AppCompatActivity {
         st.setText("Percentage: " + DeviceStatisticsPublisher.getBatteryLevel(this) +"%");
         TextView st2 = findViewById(R.id.plugged);
         st2.setText(String.format("Charging Status: %s", DeviceStatisticsPublisher.isPluggedIn(this) ? "Plugged In" : "Not Charging"));
-        TextView la = findViewById(R.id.latitude);
-        la.setText(String.format("Latitude: %s", DeviceStatisticsPublisher.getLocation(this).getLatitude()));
-        TextView lo = findViewById(R.id.longitude);
-        lo.setText("Longitude: " + DeviceStatisticsPublisher.getLocation(this).getLongitude());
+        if(DeviceStatisticsPublisher.getLocation(this) != null) {
+            TextView la = findViewById(R.id.latitude);
+            la.setText(String.format("Latitude: %s", DeviceStatisticsPublisher.getLocation(this).getLatitude()));
+            TextView lo = findViewById(R.id.longitude);
+            lo.setText("Longitude: " + DeviceStatisticsPublisher.getLocation(this).getLongitude());
+        } else {
+            TextView la = findViewById(R.id.latitude);
+            la.setText("Latitude: Not Available");
+            TextView lo = findViewById(R.id.longitude);
+            lo.setText("Longitude: Not Available" );
+        }
         TextView sta = findViewById(R.id.statusText);
 
         boolean isDisc = sta.getText().toString().contains("Discoverable");
