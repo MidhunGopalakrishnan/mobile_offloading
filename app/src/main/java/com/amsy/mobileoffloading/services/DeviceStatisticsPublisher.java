@@ -54,9 +54,10 @@ public class DeviceStatisticsPublisher {
             deviceStats.setBatteryLevel(getBatteryLevel(context));
             deviceStats.setCharging(isPluggedIn(context));
             deviceStats.setLocation(getLocation(context));
-
-        ClientPayLoad payload = new ClientPayLoad().setTag(Constants.PayloadTags.DEVICE_STATS).setData(deviceStats);
-        DataTransfer.sendPayload(context, endpointId, payload);
+        if(endpointId != null) {
+            ClientPayLoad payload = new ClientPayLoad().setTag(Constants.PayloadTags.DEVICE_STATS).setData(deviceStats);
+            DataTransfer.sendPayload(context, endpointId, payload);
+        }
         Log.d("WORKER", "DEVICE STATUS");
         Log.d("WORKER", "Battery: " + deviceStats.getBatteryLevel() + "");
         Log.d("WORKER", "Plugged: " + deviceStats.isCharging() + "");

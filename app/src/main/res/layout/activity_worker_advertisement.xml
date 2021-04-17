@@ -7,6 +7,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
+    android:background="#F7F9FC"
     android:padding="10dp"
     tools:context=".WorkerAdvertisement">
 
@@ -26,12 +27,12 @@
             android:textStyle="bold" />
 
         <TextView
-            android:id="@+id/textView3"
+            android:id="@+id/deviceId"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
             android:text="Device Name:"
-            android:textColor="#272727"
+            android:textColor="#000000"
             android:textStyle="bold" />
 
         <LinearLayout
@@ -44,13 +45,14 @@
                 android:layout_height="130dp"
                 android:layout_marginTop="10dp"
                 app:cardUseCompatPadding="true"
+                android:elevation="4dp"
                 app:cardCornerRadius="15dp">
 
                 <RelativeLayout
                     android:id="@+id/batteryCard"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:background="#303F9F"
+                    android:background="#1E88E5"
                     android:padding="10dp">
 
                     <TextView
@@ -72,7 +74,7 @@
                         android:layout_below="@id/batteryText"
                         android:layout_marginLeft="10dp"
                         android:layout_marginTop="3dp"
-                        android:text="Percentage: 80%"
+                        android:text="Percentage: Calculating.."
                         android:textColor="#ffff">
 
                     </TextView>
@@ -84,19 +86,21 @@
                         android:layout_below="@id/percentage"
                         android:layout_marginLeft="10dp"
                         android:layout_marginTop="3dp"
-                        android:text="Charging Status: Plugged In"
+                        android:text="Charging Status: Checking.."
                         android:textColor="#ffff">
 
                     </TextView>
 
                     <eo.view.batterymeter.BatteryMeterView
+                        android:id="@+id/batteryMeter"
                         android:layout_width="100dp"
                         android:layout_height="120dp"
                         android:layout_alignParentRight="true"
                         android:padding="10dp"
-                        app:batteryMeterChargeLevel="80"
-                        app:batteryMeterChargingColor="#4caf50"
-                        app:batteryMeterColor="#0277bd"
+                        android:soundEffectsEnabled="true"
+                        app:batteryMeterChargeLevel="0"
+                        app:batteryMeterChargingColor="#FFFFFF"
+                        app:batteryMeterColor="#FFFFFF"
                         app:batteryMeterCriticalChargeLevel="15"
                         app:batteryMeterCriticalColor="#d84315"
                         app:batteryMeterIndicatorColor="@android:color/transparent"
@@ -113,13 +117,14 @@
                 android:layout_height="130dp"
                 android:layout_marginTop="10dp"
                 app:cardUseCompatPadding="true"
+                android:elevation="4dp"
                 app:cardCornerRadius="15dp">
 
                 <RelativeLayout
                     android:id="@+id/locationCard"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:background="#303F9F"
+                    android:background="#1E88E5"
                     android:padding="10dp">
 
                     <TextView
@@ -141,7 +146,7 @@
                         android:layout_below="@id/locationText"
                         android:layout_marginLeft="10dp"
                         android:layout_marginTop="3dp"
-                        android:text="Lattitude: 12.35"
+                        android:text="Lattitude: Calculating.."
                         android:textColor="#ffff">
 
                     </TextView>
@@ -153,7 +158,7 @@
                         android:layout_below="@id/latitude"
                         android:layout_marginLeft="10dp"
                         android:layout_marginTop="3dp"
-                        android:text="Longitude: 35.55"
+                        android:text="Longitude: Calculating.."
                         android:textColor="#ffff">
 
                     </TextView>
@@ -172,24 +177,25 @@
                 android:layout_marginTop="10dp"
                 app:cardBackgroundColor="#FFFFFF"
                 app:cardUseCompatPadding="true"
-                android:elevation="4dp"
                 app:cardCornerRadius="15dp">
+
                 <RelativeLayout
                     android:id="@+id/workerCard"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:background="#303F9F"
+                    android:background="#FFFFFF"
                     android:padding="10dp">
+
                     <TextView
                         android:id="@+id/advertText"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginLeft="10dp"
-                        android:text="Visibility"
-                        android:textColor="#ffff"
+                        android:layout_marginStart="10dp"
+                        android:text="Visibility Status"
+                        android:textColor="#000000"
                         android:textSize="30sp"
-                        android:textStyle="bold">
-                    </TextView>
+                        android:textStyle="bold" />
+
                     <TextView
                         android:id="@+id/statusText"
 
@@ -197,16 +203,36 @@
                         android:layout_height="wrap_content"
                         android:layout_below="@id/advertText"
                         android:layout_marginLeft="10dp"
-                        android:textSize="20sp"
-                        android:text="Starting.."
-                        android:textColor="#ffff" >
-                    </TextView>
+                        android:text="Starting..."
+                        android:textColor="#000000"
+                        android:textSize="20sp" />
+
                     <pl.droidsonroids.gif.GifImageView
+                        android:id="@+id/loading"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
-                        android:layout_margin="10dp"
                         android:layout_below="@id/statusText"
+                        android:layout_marginStart="10dp"
+                        android:layout_marginTop="10dp"
+                        android:layout_marginEnd="10dp"
+                        android:layout_marginBottom="10dp"
                         android:src="@drawable/loading" />
+
+                    <ImageView
+                        android:id="@+id/online"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_below="@id/statusText"
+                        android:layout_marginStart="10dp"
+                        android:layout_marginTop="10dp"
+                        android:layout_marginEnd="10dp"
+                        android:layout_marginBottom="10dp"
+                        android:maxWidth="100dp"
+                        android:src="@drawable/ic_online"
+                        android:visibility="invisible"
+                        app:srcCompat="@drawable/ic_online">
+
+                    </ImageView>
                 </RelativeLayout>
 
             </androidx.cardview.widget.CardView>

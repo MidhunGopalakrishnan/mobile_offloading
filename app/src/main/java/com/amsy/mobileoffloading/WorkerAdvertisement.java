@@ -9,13 +9,17 @@ import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.amsy.mobileoffloading.helper.Constants;
 import com.amsy.mobileoffloading.services.Advertiser;
+import com.amsy.mobileoffloading.services.DeviceStatisticsPublisher;
 import com.google.android.gms.nearby.Nearby;
 import com.google.android.gms.nearby.connection.ConnectionInfo;
 import com.google.android.gms.nearby.connection.ConnectionLifecycleCallback;
@@ -23,6 +27,10 @@ import com.google.android.gms.nearby.connection.ConnectionResolution;
 import com.google.android.gms.nearby.connection.Payload;
 import com.google.android.gms.nearby.connection.PayloadCallback;
 import com.google.android.gms.nearby.connection.PayloadTransferUpdate;
+import com.google.android.gms.tasks.OnSuccessListener;
+
+import eo.view.batterymeter.BatteryMeterView;
+import pl.droidsonroids.gif.GifImageView;
 
 public class WorkerAdvertisement extends AppCompatActivity {
     private Advertiser advertiser;
@@ -31,6 +39,10 @@ public class WorkerAdvertisement extends AppCompatActivity {
     private ConnectionLifecycleCallback connectionListener;
     private PayloadCallback payloadCallback;
     private Dialog confirmationDialog;
+    private DeviceStatisticsPublisher deviceStatsPublisher;
+    private Handler handler;
+    private Runnable runnable;
+    public boolean isOnline = false;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -38,6 +50,8 @@ public class WorkerAdvertisement extends AppCompatActivity {
         initialiseDialog();
         advertiser = new Advertiser(this.getApplicationContext());
         workerId =  Build.MANUFACTURER + " " + Build.MODEL;
+        deviceStatsPublisher = new DeviceStatisticsPublisher(getApplicationContext(), null);
+        setDeviceId("Device ID: " + workerId);
 
         connectionListener = new ConnectionLifecycleCallback() {
             @Override
@@ -74,7 +88,44 @@ public class WorkerAdvertisement extends AppCompatActivity {
                 Log.d("WORKER", "Payload Transferring...");
             }
         };
+
+        handler = new Handler(Looper.getMainLooper());
+        runnable = () -> {
+            refreshCardData();
+            handler.postDelayed(runnable, Constants.UPDATE_INTERVAL);
+        };
     }
+
+    void setStatusText(String text) {
+        TextView st = findViewById(R.id.statusText);
+        st.setText(text);
+    }
+    void setDeviceId(String text) {
+        TextView st = findViewById(R.id.deviceId);
+        st.setText(text);
+    }
+    void refreshCardData() {
+        TextView st = findViewById(R.id.percentage);
+        BatteryMeterView bv = findViewById(R.id.batteryMeter);
+        bv.setChargeLevel(DeviceStatisticsPublisher.getBatteryLevel(this));
+        bv.setCharging( DeviceStatisticsPublisher.isPluggedIn(this));
+        st.setText("Percentage: " + DeviceStatisticsPublisher.getBatteryLevel(this) +"%");
+        TextView st2 = findViewById(R.id.plugged);
+        st2.setText(String.format("Charging Status: %s", DeviceStatisticsPublisher.isPluggedIn(this) ? "Plugged In" : "Not Charging"));
+        TextView la = findViewById(R.id.latitude);
+        la.setText(String.format("Latitude: %s", DeviceStatisticsPublisher.getLocation(this).getLatitude()));
+        TextView lo = findViewById(R.id.longitude);
+        lo.setText("Longitude: " + DeviceStatisticsPublisher.getLocation(this).getLongitude());
+        TextView sta = findViewById(R.id.statusText);
+
+        boolean isDisc = sta.getText().toString().contains("Discoverable");
+        ImageView online = findViewById(R.id.online);
+        online.setVisibility(isDisc ? View.VISIBLE: View.INVISIBLE);
+        GifImageView loading = findViewById(R.id.loading);
+        loading.setVisibility(isDisc ? View.INVISIBLE: View.VISIBLE);
+    }
+
+
 
     void initialiseDialog() {
         confirmationDialog = new Dialog(this);
@@ -102,14 +153,22 @@ public class WorkerAdvertisement extends AppCompatActivity {
 
     @Override
     protected void onResume() {
+        setStatusText("Initializing...");
         super.onResume();
-        advertiser.start(workerId, connectionListener);
+        advertiser.start(workerId, connectionListener,findViewById(R.id.statusText) );
+        deviceStatsPublisher.start();
+        handler.postDelayed(runnable,  Constants.UPDATE_INTERVAL);
+
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         advertiser.stop();
+        setStatusText("Device is not discoverable");
+        deviceStatsPublisher.stop();
+        handler.removeCallbacks(runnable);
+
     }
 
     private void startWorkerComputation() {
