@@ -42,6 +42,7 @@
                     android:id="@+id/desc"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:paddingTop="5dp"
                     android:text="Make sure the devices you want to connect to are in the worker mode. Your phone is now in the master mode"
                     android:textColor="#FFFFFF" />
 

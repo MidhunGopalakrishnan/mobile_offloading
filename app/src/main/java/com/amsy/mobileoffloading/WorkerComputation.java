@@ -98,4 +98,5 @@ public class WorkerComputation extends AppCompatActivity {
         super.finish();
         Advertiser.stopAdvertising(this.getApplicationContext());
     }
+
 }

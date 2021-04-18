@@ -27,11 +27,10 @@ public class MasterDiscoveryService {
       return Nearby.getConnectionsClient(context)
                 .startDiscovery(context.getPackageName(), endpointDiscoveryCallback, discoveryOptions)
                 .addOnSuccessListener((unused) -> {
-                    Log.d("OFLOD", "DISCOVERY IN PROGRESS");
-                    Log.d("OFLOD", unused + "");
+                    Log.d("MASTER", "DISCOVERY IN PROGRESS");
                 })
                 .addOnFailureListener((Exception e) -> {
-                    Log.d("OFLOD", "DISCOVERING FAILED");
+                    Log.d("MASTER", "DISCOVERING FAILED");
                     e.printStackTrace();
                 });
     }

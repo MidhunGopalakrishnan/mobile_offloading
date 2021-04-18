@@ -123,8 +123,6 @@ public class WorkerAdvertisement extends AppCompatActivity {
             TextView lo = findViewById(R.id.longitude);
             lo.setText("Longitude: Not Available");
         }
-
-
     }
 
 
