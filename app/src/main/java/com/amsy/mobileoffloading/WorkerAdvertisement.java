@@ -77,7 +77,6 @@ public class WorkerAdvertisement extends AppCompatActivity {
             public void onConnectionResult(String id, ConnectionResolution connectionResolution) {
                 Log.d("WORKER", "Connection Accepted by master: " + id);
                 Log.d("WORKER", connectionResolution.getStatus().toString() + "");
-                Toast.makeText(WorkerAdvertisement.this, "Connected", Toast.LENGTH_SHORT).show();
             }
 
             @Override
@@ -190,5 +189,11 @@ public class WorkerAdvertisement extends AppCompatActivity {
         intent.putExtras(bundle);
         startActivity(intent);
         finish();
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        Advertiser.stopAdvertising(this.getApplicationContext());
     }
 }

@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/card"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    app:cardBackgroundColor="@color/purple_500"
     android:layout_margin="5dp"
-    app:cardCornerRadius="20dp">
+    app:cardBackgroundColor="@color/purple_500"
+    app:cardCornerRadius="10dp">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -17,11 +18,11 @@
         <TextView
             android:id="@+id/client_id"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="40dp"
             android:layout_gravity="center"
             android:layout_marginLeft="15dp"
             android:layout_weight="0.4"
-            android:text="Device Name"
+            android:text="Device Name \nID"
             android:textColor="@color/white" />
 
         <LinearLayout
@@ -60,14 +61,6 @@
 
             </ImageView>
 
-<!--            <TextView-->
-<!--                android:id="@+id/request_status"-->
-<!--                android:layout_width="wrap_content"-->
-<!--                android:layout_height="wrap_content"-->
-<!--                android:layout_gravity="center"-->
-<!--                android:layout_marginRight="5dp"-->
-<!--                android:text="Connecting"-->
-<!--                android:textColor="@color/white" />-->
         </LinearLayout>
 
     </LinearLayout>

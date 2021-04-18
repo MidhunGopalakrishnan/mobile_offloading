@@ -1,6 +1,7 @@
 package com.amsy.mobileoffloading.adapters;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -8,6 +9,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.amsy.mobileoffloading.R;
@@ -61,14 +63,14 @@ public class ConnectedDevicesAdapter extends RecyclerView.Adapter<ConnectedDevic
         }
 
         public void setClientId(String endpointId, String endpointName) {
-            this.ClientId.setText(endpointName  + " (" + endpointId + ")");
+            this.ClientId.setText(endpointName  + "\n(" + endpointId + ")");
         }
 
         public void setBatteryLevel(int batteryLevel) {
             if (batteryLevel > 0 && batteryLevel <= 100) {
                 this.BatteryLevel.setText(batteryLevel + "%");
             } else {
-                this.BatteryLevel.setText("-%");
+                this.BatteryLevel.setText("");
             }
         }
 
