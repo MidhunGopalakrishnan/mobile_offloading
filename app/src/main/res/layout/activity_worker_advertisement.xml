@@ -97,15 +97,13 @@
                         android:layout_alignParentRight="true"
                         android:padding="10dp"
                         android:soundEffectsEnabled="true"
+
                         app:batteryMeterChargeLevel="0"
                         app:batteryMeterChargingColor="#FFFFFF"
                         app:batteryMeterColor="#FFFFFF"
                         app:batteryMeterCriticalChargeLevel="15"
-                        app:batteryMeterCriticalColor="#d84315"
-                        app:batteryMeterIndicatorColor="@android:color/transparent"
-                        app:batteryMeterIsCharging="true"
+                        app:batteryMeterIsCharging="false"
                         app:batteryMeterTheme="rounded"
-                        app:batteryMeterUnknownColor="#e0e0e0"
                         tools:layout_editor_absoluteX="131dp"
                         tools:layout_editor_absoluteY="439dp" />
                 </RelativeLayout>
