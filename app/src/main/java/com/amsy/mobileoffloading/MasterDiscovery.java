@@ -52,11 +52,17 @@ public class MasterDiscovery extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
+
+        NearbyConnectionsManager.getInstance(getApplicationContext()).unregisterPayloadListener(payloadListener);
+        NearbyConnectionsManager.getInstance(getApplicationContext()).unregisterClientConnectionListener(clientConnectionListener);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+
+        NearbyConnectionsManager.getInstance(getApplicationContext()).registerPayloadListener(payloadListener);
+        NearbyConnectionsManager.getInstance(getApplicationContext()).registerClientConnectionListener(clientConnectionListener);
     }
 
     @Override
@@ -88,29 +94,13 @@ public class MasterDiscovery extends AppCompatActivity {
                 }
             }
         };
-        payloadCallback = new PayloadCallback() {
-            @Override
-            public void onPayloadReceived(@NonNull String endpointId, @NonNull Payload payload) {
-                try {
-                    Log.d("MASTER", "RECEIVED PAYLOAD");
-                    payloadListener.onPayloadReceived(endpointId, payload);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
 
-
-            @Override
-            public void onPayloadTransferUpdate(@NonNull String endpointId, @NonNull PayloadTransferUpdate payloadTransferUpdate) {
-
-            }
-        };
 
         clientConnectionListener = new ClientConnectionListener() {
             @Override
             public void onConnectionInitiated(String endpointId, ConnectionInfo connectionInfo) {
                 Log.d("MASTER", "clientConnectionListener -  onConnectionInitiated");
-                Nearby.getConnectionsClient(getApplicationContext()).acceptConnection(endpointId, payloadCallback);
+                NearbyConnectionsManager.getInstance(getApplicationContext()).acceptConnection(endpointId);
             }
 
             @Override
@@ -133,40 +123,6 @@ public class MasterDiscovery extends AppCompatActivity {
             public void onDisconnected(String endpointId) {
                 Log.d("MASTER", "clientConnectionListener -  onDisconnected ");
                 removeConnectedDevice(endpointId);
-            }
-        };
-
-        connectionLifecycleCallback = new ConnectionLifecycleCallback() {
-            @Override
-            public void onConnectionInitiated(@NonNull String endpointId, @NonNull ConnectionInfo connectionInfo) {
-                    try {
-                        Log.d("MASTER", "connectionLifecycleCallback -  onConnectionInitiated ");
-                        clientConnectionListener.onConnectionInitiated(endpointId, connectionInfo);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-
-            }
-
-            @Override
-            public void onConnectionResult(@NonNull String endpointId, @NonNull ConnectionResolution connectionResolution) {
-                    try {
-                        Log.d("MASTER", "connectionLifecycleCallback -  onConnectionResult ");
-                        clientConnectionListener.onConnectionResult(endpointId, connectionResolution);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-            }
-
-            @Override
-            public void onDisconnected(@NonNull String endpointId) {
-                Log.d("MASTER", "connectionLifecycleCallback -  onDisconnected ");
-                Toast.makeText(getApplicationContext(), "DISCONNECTED", Toast.LENGTH_SHORT).show();
-                    try {
-                        clientConnectionListener.onDisconnected(endpointId);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
             }
         };
 
