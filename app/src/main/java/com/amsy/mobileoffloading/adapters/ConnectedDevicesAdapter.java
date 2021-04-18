@@ -1,6 +1,7 @@
 package com.amsy.mobileoffloading.adapters;
 
 import android.content.Context;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
@@ -27,17 +28,22 @@ public class ConnectedDevicesAdapter extends RecyclerView.Adapter<ConnectedDevic
     @NonNull
     @Override
     public ConnectedDevicesAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        return null;
+        LayoutInflater layoutInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        View itemView = layoutInflater.inflate(R.layout.connected_device_item, parent, false);
+
+        return new ViewHolder(itemView);
     }
 
     @Override
     public void onBindViewHolder(@NonNull ConnectedDevicesAdapter.ViewHolder holder, int position) {
-
+        holder.setClientId(connectedDevices.get(position).getEndpointId(), connectedDevices.get(position).getEndpointName());
+        holder.setBatteryLevel(connectedDevices.get(position).getDeviceStats().getBatteryLevel());
+        holder.setRequestStatus(connectedDevices.get(position).getRequestStatus());
     }
 
     @Override
     public int getItemCount() {
-        return 0;
+        return connectedDevices.size();
     }
 
     protected class ViewHolder extends RecyclerView.ViewHolder {

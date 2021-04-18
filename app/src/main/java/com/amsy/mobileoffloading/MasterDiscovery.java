@@ -19,6 +19,7 @@ import com.amsy.mobileoffloading.entities.DeviceStatistics;
 import com.amsy.mobileoffloading.helper.Constants;
 import com.amsy.mobileoffloading.helper.PayloadConverter;
 import com.amsy.mobileoffloading.services.MasterDiscoveryService;
+import com.amsy.mobileoffloading.services.NearbyConnectionsManager;
 import com.google.android.gms.nearby.Nearby;
 import com.google.android.gms.nearby.connection.ConnectionInfo;
 import com.google.android.gms.nearby.connection.ConnectionLifecycleCallback;
@@ -91,6 +92,7 @@ public class MasterDiscovery extends AppCompatActivity {
             @Override
             public void onPayloadReceived(@NonNull String endpointId, @NonNull Payload payload) {
                 try {
+                    Log.d("MASTER", "RECEIVED PAYLOAD");
                     payloadListener.onPayloadReceived(endpointId, payload);
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -107,14 +109,18 @@ public class MasterDiscovery extends AppCompatActivity {
         clientConnectionListener = new ClientConnectionListener() {
             @Override
             public void onConnectionInitiated(String endpointId, ConnectionInfo connectionInfo) {
+                Log.d("MASTER", "clientConnectionListener -  onConnectionInitiated");
                 Nearby.getConnectionsClient(getApplicationContext()).acceptConnection(endpointId, payloadCallback);
             }
 
             @Override
             public void onConnectionResult(String endpointId, ConnectionResolution connectionResolution) {
-                int statusCode = connectionResolution.getStatus().getStatusCode();
 
+                Log.d("MASTER", "clientConnectionListener -  onConnectionResult");
+
+                int statusCode = connectionResolution.getStatus().getStatusCode();
                 if (statusCode == ConnectionsStatusCodes.STATUS_OK) {
+                    Log.d("MASTER", "clientConnectionListener -  onConnectionResult - STATUS_OK");
                     updateConnectedDeviceRequestStatus(endpointId, Constants.RequestStatus.ACCEPTED);
                 } else if (statusCode == ConnectionsStatusCodes.STATUS_CONNECTION_REJECTED) {
                     updateConnectedDeviceRequestStatus(endpointId, Constants.RequestStatus.REJECTED);
@@ -125,6 +131,7 @@ public class MasterDiscovery extends AppCompatActivity {
 
             @Override
             public void onDisconnected(String endpointId) {
+                Log.d("MASTER", "clientConnectionListener -  onDisconnected ");
                 removeConnectedDevice(endpointId);
             }
         };
@@ -133,6 +140,7 @@ public class MasterDiscovery extends AppCompatActivity {
             @Override
             public void onConnectionInitiated(@NonNull String endpointId, @NonNull ConnectionInfo connectionInfo) {
                     try {
+                        Log.d("MASTER", "connectionLifecycleCallback -  onConnectionInitiated ");
                         clientConnectionListener.onConnectionInitiated(endpointId, connectionInfo);
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -143,6 +151,7 @@ public class MasterDiscovery extends AppCompatActivity {
             @Override
             public void onConnectionResult(@NonNull String endpointId, @NonNull ConnectionResolution connectionResolution) {
                     try {
+                        Log.d("MASTER", "connectionLifecycleCallback -  onConnectionResult ");
                         clientConnectionListener.onConnectionResult(endpointId, connectionResolution);
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -151,6 +160,7 @@ public class MasterDiscovery extends AppCompatActivity {
 
             @Override
             public void onDisconnected(@NonNull String endpointId) {
+                Log.d("MASTER", "connectionLifecycleCallback -  onDisconnected ");
                 Toast.makeText(getApplicationContext(), "DISCONNECTED", Toast.LENGTH_SHORT).show();
                     try {
                         clientConnectionListener.onDisconnected(endpointId);
@@ -190,15 +200,8 @@ public class MasterDiscovery extends AppCompatActivity {
                 connectedDevices.add(connectedDevice);
                 connectedDevicesAdapter.notifyItemChanged(connectedDevices.size() - 1);
 
-                Nearby.getConnectionsClient(getApplicationContext())
-                        .requestConnection("MASTER", endpointId, connectionLifecycleCallback)
-                        .addOnSuccessListener(unused -> {
-                            Log.d("OFLOD", "CONNECTION REQUESTED");
-                        })
-                        .addOnFailureListener((Exception e) -> {
-                            Log.d("OFLOD", "CONNECTION FAILED");
-                            e.printStackTrace();
-                        });
+                NearbyConnectionsManager.getInstance(getApplicationContext()).requestConnection(endpointId, "MASTER");
+
             }
 
             @Override

@@ -79,10 +79,10 @@ public class NearbyConnectionsManager {
         Nearby.getConnectionsClient(context)
                 .requestConnection(clientId, endpointId, connectionLifecycleCallback)
                 .addOnSuccessListener(unused -> {
-                    Log.d("OFLOD", "CONNECTION REQUESTED");
+                    Log.d("NEARBYCONNCTNMGR", "CONNECTION REQUESTED");
                 })
                 .addOnFailureListener((Exception e) -> {
-                    Log.d("OFLOD", "CONNECTION FAILED");
+                    Log.d("NEARBYCONNCTNMGR", "CONNECTION FAILED");
                     e.printStackTrace();
                 });
     }
@@ -105,5 +105,33 @@ public class NearbyConnectionsManager {
 
             }
         });
+    }
+    public boolean registerPayloadListener(PayloadListener payloadListener) {
+        if (payloadListener != null) {
+            return payloadListenersSet.add(payloadListener);
+        }
+        return false;
+    }
+
+    public boolean registerClientConnectionListener(ClientConnectionListener clientConnectionListener) {
+        if (clientConnectionListener != null) {
+            return clientConnectionListenerSet.add(clientConnectionListener);
+        }
+        return false;
+    }
+
+    public boolean unregisterPayloadListener(PayloadListener payloadListener) {
+        if (payloadListener != null) {
+            return payloadListenersSet.remove(payloadListener);
+        }
+        return false;
+    }
+
+
+    public boolean unregisterClientConnectionListener(ClientConnectionListener clientConnectionListener) {
+        if (clientConnectionListener != null) {
+            return clientConnectionListenerSet.remove(clientConnectionListener);
+        }
+        return false;
     }
 }
