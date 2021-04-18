@@ -7,8 +7,9 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import android.os.Bundle;
 import android.util.Log;
-import android.widget.Button;
-import android.widget.Toast;
+import android.widget.ProgressBar;
+import android.widget.TextView;
+
 
 import com.amsy.mobileoffloading.adapters.ConnectedDevicesAdapter;
 import com.amsy.mobileoffloading.callback.ClientConnectionListener;
@@ -20,15 +21,13 @@ import com.amsy.mobileoffloading.helper.Constants;
 import com.amsy.mobileoffloading.helper.PayloadConverter;
 import com.amsy.mobileoffloading.services.MasterDiscoveryService;
 import com.amsy.mobileoffloading.services.NearbyConnectionsManager;
-import com.google.android.gms.nearby.Nearby;
+import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.nearby.connection.ConnectionInfo;
-import com.google.android.gms.nearby.connection.ConnectionLifecycleCallback;
 import com.google.android.gms.nearby.connection.ConnectionResolution;
 import com.google.android.gms.nearby.connection.ConnectionsStatusCodes;
 import com.google.android.gms.nearby.connection.DiscoveredEndpointInfo;
 import com.google.android.gms.nearby.connection.EndpointDiscoveryCallback;
 import com.google.android.gms.nearby.connection.Payload;
-import com.google.android.gms.nearby.connection.PayloadCallback;
 import com.google.android.gms.nearby.connection.PayloadTransferUpdate;
 
 import java.io.IOException;
@@ -37,22 +36,17 @@ import java.util.List;
 
 public class MasterDiscovery extends AppCompatActivity {
 
-//    private Button bDiscoveryComplete;
     private RecyclerView rvConnectedDevices;
     private ConnectedDevicesAdapter connectedDevicesAdapter;
     private List<ConnectedDevice> connectedDevices = new ArrayList<>();
 
     private MasterDiscoveryService masterDiscoveryService;
     private ClientConnectionListener clientConnectionListener;
-    private ConnectionLifecycleCallback connectionLifecycleCallback;
-
     private PayloadListener payloadListener;
-    private PayloadCallback payloadCallback;
 
     @Override
     protected void onPause() {
         super.onPause();
-
         NearbyConnectionsManager.getInstance(getApplicationContext()).unregisterPayloadListener(payloadListener);
         NearbyConnectionsManager.getInstance(getApplicationContext()).unregisterClientConnectionListener(clientConnectionListener);
     }
@@ -60,7 +54,6 @@ public class MasterDiscovery extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-
         NearbyConnectionsManager.getInstance(getApplicationContext()).registerPayloadListener(payloadListener);
         NearbyConnectionsManager.getInstance(getApplicationContext()).registerClientConnectionListener(clientConnectionListener);
     }
@@ -70,7 +63,6 @@ public class MasterDiscovery extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_master_discovery);
 
-//        bDiscoveryComplete = findViewById(R.id.b_discovery_done);
         rvConnectedDevices = findViewById(R.id.rv_connected_devices);
 
         connectedDevicesAdapter = new ConnectedDevicesAdapter(this, connectedDevices);
@@ -169,13 +161,25 @@ public class MasterDiscovery extends AppCompatActivity {
             public void onEndpointLost(@NonNull String endpointId) {
                 Log.d("MASTER", "ENDPOINT LOST");
                 Log.d("MASTER", endpointId);
-
                 removeConnectedDevice(endpointId);
             }
         };
 
         masterDiscoveryService = new MasterDiscoveryService(this);
-        masterDiscoveryService.start(endpointDiscoveryCallback);
+        masterDiscoveryService.start(endpointDiscoveryCallback)
+                .addOnSuccessListener((unused) -> {
+                    setStatus("Discovering...", true);
+                })
+                .addOnFailureListener(command -> {
+                    if (((ApiException) command).getStatusCode() == 8002) {
+                        setStatus("Discovering...", true);
+                    } else {
+                        setStatus("Discovering Failed", false);
+                        finish();
+                    }
+                    command.printStackTrace();
+                });
+        ;
     }
 
     private void removeConnectedDevice(String endpointId) {
@@ -196,5 +200,18 @@ public class MasterDiscovery extends AppCompatActivity {
                 connectedDevicesAdapter.notifyItemChanged(i);
             }
         }
+    }
+
+    void setStatus(String text, boolean search) {
+        TextView disc = findViewById(R.id.discovery);
+        disc.setText(text);
+        ProgressBar pb = findViewById(R.id.progressBar);
+        pb.setIndeterminate(search);
+    }
+
+    @Override
+    public void finish() {
+        super.finish();
+        masterDiscoveryService.stop();
     }
 }

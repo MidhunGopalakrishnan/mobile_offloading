@@ -7,6 +7,7 @@ import com.google.android.gms.nearby.Nearby;
 import com.google.android.gms.nearby.connection.DiscoveryOptions;
 import com.google.android.gms.nearby.connection.EndpointDiscoveryCallback;
 import com.google.android.gms.nearby.connection.Strategy;
+import com.google.android.gms.tasks.Task;
 
 public class MasterDiscoveryService {
 
@@ -22,8 +23,8 @@ public class MasterDiscoveryService {
                         .build();
     }
 
-    public void start(EndpointDiscoveryCallback endpointDiscoveryCallback) {
-        Nearby.getConnectionsClient(context)
+    public Task<Void> start(EndpointDiscoveryCallback endpointDiscoveryCallback) {
+      return Nearby.getConnectionsClient(context)
                 .startDiscovery(context.getPackageName(), endpointDiscoveryCallback, discoveryOptions)
                 .addOnSuccessListener((unused) -> {
                     Log.d("OFLOD", "DISCOVERY IN PROGRESS");
