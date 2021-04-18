@@ -8,9 +8,12 @@
 
     <TextView
         android:id="@+id/question"
-        android:layout_width="349dp"
-        android:layout_height="28dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:layout_marginTop="220dp"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp"
+
         android:text="Which mode would you like to work?"
         android:textSize="20dp"
         android:textStyle="bold"

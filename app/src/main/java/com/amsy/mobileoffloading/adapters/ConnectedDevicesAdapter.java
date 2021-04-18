@@ -4,6 +4,7 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -50,34 +51,34 @@ public class ConnectedDevicesAdapter extends RecyclerView.Adapter<ConnectedDevic
 
         private TextView ClientId;
         private TextView BatteryLevel;
-        private TextView RequestStatus;
+        private ImageView RequestStatus;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             ClientId = itemView.findViewById(R.id.client_id);
             BatteryLevel = itemView.findViewById(R.id.battery_level);
-            RequestStatus = itemView.findViewById(R.id.request_status);
+            RequestStatus = itemView.findViewById(R.id.request_status_image);
         }
 
         public void setClientId(String endpointId, String endpointName) {
-            this.ClientId.setText(endpointId + " (" + endpointName + ")");
+            this.ClientId.setText(endpointName  + " (" + endpointId + ")");
         }
 
         public void setBatteryLevel(int batteryLevel) {
             if (batteryLevel > 0 && batteryLevel <= 100) {
                 this.BatteryLevel.setText(batteryLevel + "%");
             } else {
-                this.BatteryLevel.setText("- %");
+                this.BatteryLevel.setText("-%");
             }
         }
 
         public void setRequestStatus(String requestStatus) {
             if (requestStatus.equals(Constants.RequestStatus.ACCEPTED)) {
-                this.RequestStatus.setText("(request accepted)");
+                this.RequestStatus.setBackgroundResource(R.drawable.ic_outline_check_circle_24);
             } else if (requestStatus.equals(Constants.RequestStatus.REJECTED)) {
-                this.RequestStatus.setText("(request rejected)");
+                this.RequestStatus.setBackgroundResource(R.drawable.ic_outline_cancel_24);
             } else {
-                this.RequestStatus.setText("(request pending)");
+                this.RequestStatus.setBackgroundResource(R.drawable.ic_outline_pending_24);
             }
         }
     }

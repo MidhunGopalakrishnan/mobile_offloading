@@ -2,6 +2,7 @@ package com.amsy.mobileoffloading;
 
 
 import androidx.appcompat.app.AppCompatActivity;
+
 import android.app.Dialog;
 import android.content.Intent;
 import android.graphics.Color;
@@ -15,13 +16,16 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import com.amsy.mobileoffloading.callback.ClientConnectionListener;
 import com.amsy.mobileoffloading.helper.Constants;
 import com.amsy.mobileoffloading.services.Advertiser;
 import com.amsy.mobileoffloading.services.DeviceStatisticsPublisher;
 import com.amsy.mobileoffloading.services.NearbyConnectionsManager;
+import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.nearby.connection.ConnectionInfo;
 import com.google.android.gms.nearby.connection.ConnectionResolution;
+
 import eo.view.batterymeter.BatteryMeterView;
 import pl.droidsonroids.gif.GifImageView;
 
@@ -34,13 +38,18 @@ public class WorkerAdvertisement extends AppCompatActivity {
     private DeviceStatisticsPublisher deviceStatsPublisher;
     private Handler handler;
     private Runnable runnable;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_worker_advertisement);
+        workerId = Build.MANUFACTURER + " " + Build.MODEL;
         initialiseDialog();
+        //Start Advertisement
         advertiser = new Advertiser(this.getApplicationContext());
-        workerId =  Build.MANUFACTURER + " " + Build.MODEL;
+
+
+
         deviceStatsPublisher = new DeviceStatisticsPublisher(getApplicationContext(), null);
         setDeviceId("Device ID: " + workerId);
 
@@ -80,23 +89,30 @@ public class WorkerAdvertisement extends AppCompatActivity {
         };
     }
 
-    void setStatusText(String text) {
+    void setStatusText(String text, boolean available) {
         TextView st = findViewById(R.id.statusText);
         st.setText(text);
+        TextView sta = findViewById(R.id.statusText);
+        ImageView online = findViewById(R.id.online);
+        online.setVisibility(available ? View.VISIBLE : View.INVISIBLE);
+        GifImageView loading = findViewById(R.id.loading);
+        loading.setVisibility(available ? View.INVISIBLE : View.VISIBLE);
     }
+
     void setDeviceId(String text) {
         TextView st = findViewById(R.id.deviceId);
         st.setText(text);
     }
+
     void refreshCardData() {
         TextView st = findViewById(R.id.percentage);
         BatteryMeterView bv = findViewById(R.id.batteryMeter);
         bv.setChargeLevel(DeviceStatisticsPublisher.getBatteryLevel(this));
-        bv.setCharging( DeviceStatisticsPublisher.isPluggedIn(this));
-        st.setText("Percentage: " + DeviceStatisticsPublisher.getBatteryLevel(this) +"%");
+        bv.setCharging(DeviceStatisticsPublisher.isPluggedIn(this));
+        st.setText("Percentage: " + DeviceStatisticsPublisher.getBatteryLevel(this) + "%");
         TextView st2 = findViewById(R.id.plugged);
         st2.setText(String.format("Charging Status: %s", DeviceStatisticsPublisher.isPluggedIn(this) ? "Plugged In" : "Not Charging"));
-        if(DeviceStatisticsPublisher.getLocation(this) != null) {
+        if (DeviceStatisticsPublisher.getLocation(this) != null) {
             TextView la = findViewById(R.id.latitude);
             la.setText(String.format("Latitude: %s", DeviceStatisticsPublisher.getLocation(this).getLatitude()));
             TextView lo = findViewById(R.id.longitude);
@@ -105,17 +121,11 @@ public class WorkerAdvertisement extends AppCompatActivity {
             TextView la = findViewById(R.id.latitude);
             la.setText("Latitude: Not Available");
             TextView lo = findViewById(R.id.longitude);
-            lo.setText("Longitude: Not Available" );
+            lo.setText("Longitude: Not Available");
         }
-        TextView sta = findViewById(R.id.statusText);
 
-        boolean isDisc = sta.getText().toString().contains("Discoverable");
-        ImageView online = findViewById(R.id.online);
-        online.setVisibility(isDisc ? View.VISIBLE: View.INVISIBLE);
-        GifImageView loading = findViewById(R.id.loading);
-        loading.setVisibility(isDisc ? View.INVISIBLE: View.VISIBLE);
+
     }
-
 
 
     void initialiseDialog() {
@@ -123,10 +133,12 @@ public class WorkerAdvertisement extends AppCompatActivity {
         confirmationDialog.setContentView(R.layout.confirmation_dialog);
         confirmationDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         confirmationDialog.findViewById(R.id.accept).setOnClickListener(v -> acceptConnection());
-        confirmationDialog.findViewById(R.id.reject).setOnClickListener(v -> rejectConnection());;
+        confirmationDialog.findViewById(R.id.reject).setOnClickListener(v -> rejectConnection());
+        ;
     }
+
     void showDialog(String masterInfo) {
-       TextView title =  confirmationDialog.findViewById(R.id.dialogText);
+        TextView title = confirmationDialog.findViewById(R.id.dialogText);
         title.setText(String.format("%s is trying to connect. Do you accept the connection ?", masterInfo));
         confirmationDialog.show();
     }
@@ -136,6 +148,7 @@ public class WorkerAdvertisement extends AppCompatActivity {
         confirmationDialog.dismiss();
         startWorkerComputation();
     }
+
     void rejectConnection() {
         NearbyConnectionsManager.getInstance(getApplicationContext()).rejectConnection(masterId);
         confirmationDialog.dismiss();
@@ -143,19 +156,31 @@ public class WorkerAdvertisement extends AppCompatActivity {
 
     @Override
     protected void onResume() {
-        setStatusText("Initializing...");
+        setStatusText("Initializing...", false);
         super.onResume();
+        advertiser.start(workerId).addOnSuccessListener(command -> {
+                setStatusText("Discoverable by all devices", true);
+        }).addOnFailureListener(command -> {
+            if(((ApiException) command).getStatusCode() == 8001) {
+                Log.d("WORKER", "Discoverable by all devices" );
+                setStatusText("Discoverable by all devices" , true);
+
+            } else {
+                setStatusText("Failed to host device", false);
+            }
+            command.printStackTrace();
+        });
         NearbyConnectionsManager.getInstance(getApplicationContext()).registerClientConnectionListener(connectionListener);
-        advertiser.start(workerId, findViewById(R.id.statusText));
+        Log.d("WORKER", "Starting Device Stats");
         deviceStatsPublisher.start();
-        handler.postDelayed(runnable,  Constants.UPDATE_INTERVAL_UI);
+        handler.postDelayed(runnable, Constants.UPDATE_INTERVAL_UI);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         NearbyConnectionsManager.getInstance(getApplicationContext()).unregisterClientConnectionListener(connectionListener);
-        advertiser.stop();
+        Log.d("WORKER", "Stopping Device Stats");
         deviceStatsPublisher.stop();
         handler.removeCallbacks(runnable);
     }
@@ -168,5 +193,4 @@ public class WorkerAdvertisement extends AppCompatActivity {
         startActivity(intent);
         finish();
     }
-
 }

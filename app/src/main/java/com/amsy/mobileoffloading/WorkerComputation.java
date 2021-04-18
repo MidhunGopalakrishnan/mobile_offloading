@@ -8,6 +8,7 @@ import android.os.Bundle;
 import com.amsy.mobileoffloading.callback.ClientConnectionListener;
 import com.amsy.mobileoffloading.callback.PayloadListener;
 import com.amsy.mobileoffloading.helper.Constants;
+import com.amsy.mobileoffloading.services.Advertiser;
 import com.amsy.mobileoffloading.services.DeviceStatisticsPublisher;
 import com.amsy.mobileoffloading.services.NearbyConnectionsManager;
 import com.google.android.gms.nearby.connection.ConnectionInfo;
@@ -36,7 +37,6 @@ public class WorkerComputation extends AppCompatActivity {
 
     private void startDeviceStatsPublisher() {
         deviceStatsPublisher = new DeviceStatisticsPublisher(getApplicationContext(), masterId);
-        deviceStatsPublisher.start();
     }
 
     private void connectToMaster() {
@@ -93,4 +93,9 @@ public class WorkerComputation extends AppCompatActivity {
         deviceStatsPublisher.stop();
     }
 
+    @Override
+    public void finish() {
+        super.finish();
+        Advertiser.stopAdvertising(this.getApplicationContext());
+    }
 }

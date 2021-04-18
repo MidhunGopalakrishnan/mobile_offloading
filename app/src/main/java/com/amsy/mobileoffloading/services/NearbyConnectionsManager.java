@@ -16,6 +16,8 @@ import com.google.android.gms.nearby.connection.ConnectionResolution;
 import com.google.android.gms.nearby.connection.Payload;
 import com.google.android.gms.nearby.connection.PayloadCallback;
 import com.google.android.gms.nearby.connection.PayloadTransferUpdate;
+import com.google.android.gms.tasks.Task;
+
 import java.util.HashSet;
 
 public class NearbyConnectionsManager {
@@ -55,7 +57,7 @@ public class NearbyConnectionsManager {
 
             @Override
             public void onDisconnected(@NonNull String endpointId) {
-                Toast.makeText(context, "Master Disconnected", Toast.LENGTH_SHORT).show();
+                Toast.makeText(context, "Disconnected", Toast.LENGTH_SHORT).show();
                 for (ClientConnectionListener clientConnectionListener : clientConnectionListenerSet) {
                     try {
                         clientConnectionListener.onDisconnected(endpointId);
@@ -111,21 +113,15 @@ public class NearbyConnectionsManager {
         Nearby.getConnectionsClient(context).rejectConnection(endpointId);
     }
 
-    public void advertise(String clientId, AdvertisingOptions advertisingOptions, TextView text) {
-        Nearby.getConnectionsClient(context)
+    public Task<Void> advertise(String clientId, AdvertisingOptions advertisingOptions) {
+       return Nearby.getConnectionsClient(context)
                 .startAdvertising(clientId, context.getPackageName(), connectionLifecycleCallback, advertisingOptions)
                 .addOnSuccessListener((unused) -> {
                     Log.d("WORKER", "Worker Advertising");
                     Log.d("WORKER", unused + "");
-                    if(text != null) {
-                        text.setText("Discoverable by all devices");
-                    }
                 })
                 .addOnFailureListener((Exception e) -> {
                     Log.d("WORKER", "Failed Advertising");
-                    if(text != null) {
-                        text.setText("Failed..");
-                    }
                     e.printStackTrace();
                 });
     }

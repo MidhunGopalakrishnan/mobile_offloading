@@ -8,6 +8,7 @@ import com.google.android.gms.nearby.Nearby;
 import com.google.android.gms.nearby.connection.AdvertisingOptions;
 import com.google.android.gms.nearby.connection.ConnectionLifecycleCallback;
 import com.google.android.gms.nearby.connection.Strategy;
+import com.google.android.gms.tasks.Task;
 
 public class Advertiser {
 
@@ -19,11 +20,15 @@ public class Advertiser {
         this.advtOptions = new AdvertisingOptions.Builder().setStrategy(Strategy.P2P_CLUSTER).build();
     }
 
-    public void start(String workerId, TextView text) {
-        NearbyConnectionsManager.getInstance(context).advertise(workerId, advtOptions, text);
+    public Task<Void> start(String workerId) {
+       return NearbyConnectionsManager.getInstance(context).advertise(workerId, advtOptions);
     }
 
     public void stop() {
         Nearby.getConnectionsClient(context).stopAdvertising();
+    }
+    public static void stopAdvertising(Context cxt) {
+        Nearby.getConnectionsClient(cxt).stopAdvertising();
+
     }
 }

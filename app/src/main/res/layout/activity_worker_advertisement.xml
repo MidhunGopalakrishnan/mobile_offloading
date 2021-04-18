@@ -22,7 +22,6 @@
             android:layout_height="wrap_content"
             android:text="Worker Information"
             android:layout_marginLeft="10dp"
-            android:textColor="#333333"
             android:textSize="30dp"
             android:textStyle="bold" />
 
@@ -33,7 +32,6 @@
             android:layout_marginLeft="10dp"
             android:layout_marginTop="10dp"
             android:text="Device Name:"
-            android:textColor="#333333"
             android:textStyle="bold" />
 
         <LinearLayout
@@ -63,7 +61,7 @@
                         android:layout_marginLeft="10dp"
                         android:text="Battery Status"
                         android:textColor="#ffff"
-                        android:textSize="30sp"
+                        android:textSize="24sp"
                         android:textStyle="bold">
 
                     </TextView>
@@ -135,7 +133,7 @@
                         android:layout_marginLeft="10dp"
                         android:text="Device Location"
                         android:textColor="#ffff"
-                        android:textSize="30sp"
+                        android:textSize="24sp"
                         android:textStyle="bold">
 
                     </TextView>
@@ -194,7 +192,7 @@
                         android:layout_marginStart="10dp"
                         android:text="Worker Status"
                         android:textColor="#FFFFFF"
-                        android:textSize="30sp"
+                        android:textSize="24sp"
                         android:textStyle="bold" />
 
                     <TextView
