@@ -93,6 +93,11 @@ public class MasterDiscovery extends AppCompatActivity {
                     e.printStackTrace();
                 }
             }
+
+            @Override
+            public void onPayloadTransferUpdate(String endpointId, PayloadTransferUpdate payloadTransferUpdate) {
+
+            }
         };
 
 

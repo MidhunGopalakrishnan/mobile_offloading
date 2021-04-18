@@ -17,9 +17,11 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.amsy.mobileoffloading.callback.ClientConnectionListener;
 import com.amsy.mobileoffloading.helper.Constants;
 import com.amsy.mobileoffloading.services.Advertiser;
 import com.amsy.mobileoffloading.services.DeviceStatisticsPublisher;
+import com.amsy.mobileoffloading.services.NearbyConnectionsManager;
 import com.google.android.gms.nearby.Nearby;
 import com.google.android.gms.nearby.connection.ConnectionInfo;
 import com.google.android.gms.nearby.connection.ConnectionLifecycleCallback;
@@ -34,13 +36,11 @@ public class WorkerAdvertisement extends AppCompatActivity {
     private Advertiser advertiser;
     private String workerId;
     private String masterId;
-    private ConnectionLifecycleCallback connectionListener;
-    private PayloadCallback payloadCallback;
+    private ClientConnectionListener connectionListener;
     private Dialog confirmationDialog;
     private DeviceStatisticsPublisher deviceStatsPublisher;
     private Handler handler;
     private Runnable runnable;
-    public boolean isOnline = false;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -51,7 +51,17 @@ public class WorkerAdvertisement extends AppCompatActivity {
         deviceStatsPublisher = new DeviceStatisticsPublisher(getApplicationContext(), null);
         setDeviceId("Device ID: " + workerId);
 
-        connectionListener = new ConnectionLifecycleCallback() {
+
+        handler = new Handler(Looper.getMainLooper());
+        runnable = () -> {
+            refreshCardData();
+            handler.postDelayed(runnable, Constants.UPDATE_INTERVAL_UI);
+        };
+        setConnectionCallback();
+    }
+
+    void setConnectionCallback() {
+        connectionListener = new ClientConnectionListener() {
             @Override
             public void onConnectionInitiated(String id, ConnectionInfo connectionInfo) {
                 Log.d("WORKER", "Connection Init");
@@ -74,23 +84,6 @@ public class WorkerAdvertisement extends AppCompatActivity {
                 Log.d("WORKER", id);
                 Toast.makeText(WorkerAdvertisement.this, "Disconnected", Toast.LENGTH_SHORT).show();
             }
-        };
-        payloadCallback = new PayloadCallback() {
-            @Override
-            public void onPayloadReceived(@NonNull String endpointId, @NonNull Payload payload) {
-                Log.d("WORKER", "Payload Received");
-            }
-
-            @Override
-            public void onPayloadTransferUpdate(@NonNull String endpointId, @NonNull PayloadTransferUpdate payloadTransferUpdate) {
-                Log.d("WORKER", "Payload Transferring...");
-            }
-        };
-
-        handler = new Handler(Looper.getMainLooper());
-        runnable = () -> {
-            refreshCardData();
-            handler.postDelayed(runnable, Constants.UPDATE_INTERVAL_UI);
         };
     }
 
@@ -146,13 +139,12 @@ public class WorkerAdvertisement extends AppCompatActivity {
     }
 
     void acceptConnection() {
-        Nearby.getConnectionsClient(this.getApplicationContext()).acceptConnection(masterId, payloadCallback);
-        advertiser.stop();
+        NearbyConnectionsManager.getInstance(getApplicationContext()).acceptConnection(masterId);
         confirmationDialog.dismiss();
         startWorkerComputation();
     }
     void rejectConnection() {
-        Nearby.getConnectionsClient(this.getApplicationContext()).rejectConnection(masterId);
+        NearbyConnectionsManager.getInstance(getApplicationContext()).rejectConnection(masterId);
         confirmationDialog.dismiss();
     }
 
@@ -160,20 +152,20 @@ public class WorkerAdvertisement extends AppCompatActivity {
     protected void onResume() {
         setStatusText("Initializing...");
         super.onResume();
-        advertiser.start(workerId, connectionListener,findViewById(R.id.statusText) );
+        NearbyConnectionsManager.getInstance(getApplicationContext()).registerClientConnectionListener(connectionListener);
+        advertiser.start(workerId, findViewById(R.id.statusText) );
         deviceStatsPublisher.start();
         handler.postDelayed(runnable,  Constants.UPDATE_INTERVAL_UI);
-
     }
 
     @Override
     protected void onPause() {
-        super.onPause();
-        advertiser.stop();
         setStatusText("Device is not discoverable");
+        super.onPause();
+        NearbyConnectionsManager.getInstance(getApplicationContext()).registerClientConnectionListener(connectionListener);
+        advertiser.stop();
         deviceStatsPublisher.stop();
         handler.removeCallbacks(runnable);
-
     }
 
     private void startWorkerComputation() {
@@ -185,7 +177,4 @@ public class WorkerAdvertisement extends AppCompatActivity {
         finish();
     }
 
-    public void simulate(View view) {
-        startWorkerComputation();
-    }
 }

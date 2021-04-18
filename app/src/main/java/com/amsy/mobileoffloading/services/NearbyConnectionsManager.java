@@ -2,20 +2,20 @@ package com.amsy.mobileoffloading.services;
 
 import android.content.Context;
 import android.util.Log;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-
 import com.amsy.mobileoffloading.callback.ClientConnectionListener;
 import com.amsy.mobileoffloading.callback.PayloadListener;
 import com.google.android.gms.nearby.Nearby;
+import com.google.android.gms.nearby.connection.AdvertisingOptions;
 import com.google.android.gms.nearby.connection.ConnectionInfo;
 import com.google.android.gms.nearby.connection.ConnectionLifecycleCallback;
 import com.google.android.gms.nearby.connection.ConnectionResolution;
 import com.google.android.gms.nearby.connection.Payload;
 import com.google.android.gms.nearby.connection.PayloadCallback;
 import com.google.android.gms.nearby.connection.PayloadTransferUpdate;
-
 import java.util.HashSet;
 
 public class NearbyConnectionsManager {
@@ -56,7 +56,6 @@ public class NearbyConnectionsManager {
             @Override
             public void onDisconnected(@NonNull String endpointId) {
                 Toast.makeText(context, "DISCONNECTED", Toast.LENGTH_SHORT).show();
-//                NearbyConnectionsManager.getInstance(context).rejectConnection(endpointId);
                 for (ClientConnectionListener clientConnectionListener : clientConnectionListenerSet) {
                     try {
                         clientConnectionListener.onDisconnected(endpointId);
@@ -106,6 +105,30 @@ public class NearbyConnectionsManager {
             }
         });
     }
+
+    public void rejectConnection(String endpointId) {
+        Log.d("WORKER", "Connection Rejected");
+        Nearby.getConnectionsClient(context).rejectConnection(endpointId);
+    }
+
+    public void advertise(String clientId, AdvertisingOptions advertisingOptions, TextView text) {
+        Nearby.getConnectionsClient(context)
+                .startAdvertising(clientId, context.getPackageName(), connectionLifecycleCallback, advertisingOptions)
+                .addOnSuccessListener((unused) -> {
+                    Log.d("WORKER", "Worker Advertising");
+                    Log.d("WORKER", unused + "");
+                    if(text != null) {
+                        text.setText("Discoverable by all devices");
+                    }
+                })
+                .addOnFailureListener((Exception e) -> {
+                    Log.d("WORKER", "Failed Advertising");
+                    if(text != null) {
+                        text.setText("Failed..");
+                    }
+                    e.printStackTrace();
+                });
+    }
     public boolean registerPayloadListener(PayloadListener payloadListener) {
         if (payloadListener != null) {
             return payloadListenersSet.add(payloadListener);
@@ -134,4 +157,6 @@ public class NearbyConnectionsManager {
         }
         return false;
     }
+
+
 }

@@ -4,52 +4,29 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
-import android.util.Log;
-import android.widget.Toast;
-
+import com.amsy.mobileoffloading.callback.ClientConnectionListener;
+import com.amsy.mobileoffloading.callback.PayloadListener;
 import com.amsy.mobileoffloading.helper.Constants;
 import com.amsy.mobileoffloading.services.DeviceStatisticsPublisher;
-import com.google.android.gms.nearby.Nearby;
+import com.amsy.mobileoffloading.services.NearbyConnectionsManager;
 import com.google.android.gms.nearby.connection.ConnectionInfo;
-import com.google.android.gms.nearby.connection.ConnectionLifecycleCallback;
 import com.google.android.gms.nearby.connection.ConnectionResolution;
 import com.google.android.gms.nearby.connection.Payload;
-import com.google.android.gms.nearby.connection.PayloadCallback;
 import com.google.android.gms.nearby.connection.PayloadTransferUpdate;
 
 public class WorkerComputation extends AppCompatActivity {
     private String masterId;
     private DeviceStatisticsPublisher deviceStatsPublisher;
-    private ConnectionLifecycleCallback connectionListener;
-    private PayloadCallback payloadCallback;
+    private ClientConnectionListener connectionListener;
+    private PayloadListener payloadCallback;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_worker_computation);
-
-
-
-        connectionListener = new ConnectionLifecycleCallback() {
-            @Override
-            public void onConnectionInitiated(String id, ConnectionInfo connectionInfo) {
-
-            }
-
-            @Override
-            public void onConnectionResult(String id, ConnectionResolution connectionResolution) {
-
-            }
-
-            @Override
-            public void onDisconnected(String id) {
-
-            }
-        };
-
         extractBundle();
         startDeviceStatsPublisher();
+        setConnectionCallback();
         connectToMaster();
-
     }
     private void extractBundle() {
         Bundle bundle = getIntent().getExtras();
@@ -60,8 +37,9 @@ public class WorkerComputation extends AppCompatActivity {
         deviceStatsPublisher = new DeviceStatisticsPublisher(getApplicationContext(), masterId);
         deviceStatsPublisher.start();
     }
+
     private void connectToMaster() {
-        payloadCallback = new PayloadCallback() {
+        payloadCallback = new PayloadListener() {
             @Override
             public void onPayloadReceived(@NonNull String endpointId, @NonNull Payload payload) {
 
@@ -72,18 +50,40 @@ public class WorkerComputation extends AppCompatActivity {
 
             }
         };
-        Nearby.getConnectionsClient(this.getApplicationContext()).acceptConnection(masterId, payloadCallback);
+        NearbyConnectionsManager.getInstance(getApplicationContext()).acceptConnection(masterId);
+    }
+
+    private void setConnectionCallback() {
+        connectionListener = new ClientConnectionListener() {
+            @Override
+            public void onConnectionInitiated(String id, ConnectionInfo connectionInfo) {
+            }
+
+            @Override
+            public void onConnectionResult(String id, ConnectionResolution connectionResolution) {
+            }
+
+            @Override
+            public void onDisconnected(String id) {
+
+            }
+        };
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-
+        NearbyConnectionsManager.getInstance(getApplicationContext()).registerPayloadListener(payloadCallback);
+        NearbyConnectionsManager.getInstance(getApplicationContext()).registerClientConnectionListener(connectionListener);
+        deviceStatsPublisher.start();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-
+        NearbyConnectionsManager.getInstance(getApplicationContext()).unregisterPayloadListener(payloadCallback);
+        NearbyConnectionsManager.getInstance(getApplicationContext()).unregisterClientConnectionListener(connectionListener);
+        deviceStatsPublisher.stop();
     }
+
 }

@@ -19,18 +19,8 @@ public class Advertiser {
         this.advtOptions = new AdvertisingOptions.Builder().setStrategy(Strategy.P2P_CLUSTER).build();
     }
 
-    public void start(String workerId, ConnectionLifecycleCallback connCallback, TextView text) {
-        Nearby.getConnectionsClient(context)
-                .startAdvertising(workerId, context.getPackageName(), connCallback, advtOptions)
-                .addOnSuccessListener((unused) -> {
-                    Log.d("WORKER", "Advertising to other devices");
-                    text.setText("Discoverable by all devices");
-                })
-                .addOnFailureListener((Exception e) -> {
-                    Log.d("WORKER", "Advertising Failed");
-                    text.setText("Failed..");
-                    e.printStackTrace();
-                });
+    public void start(String workerId, TextView text) {
+        NearbyConnectionsManager.getInstance(context).advertise(workerId, advtOptions, text);
     }
 
     public void stop() {
