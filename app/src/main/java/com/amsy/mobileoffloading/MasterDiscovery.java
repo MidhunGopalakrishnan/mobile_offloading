@@ -47,6 +47,8 @@ public class MasterDiscovery extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
+        setStatus("Stopped", false);
+        masterDiscoveryService.stop();
         NearbyConnectionsManager.getInstance(getApplicationContext()).unregisterPayloadListener(payloadListener);
         NearbyConnectionsManager.getInstance(getApplicationContext()).unregisterClientConnectionListener(clientConnectionListener);
     }
@@ -54,6 +56,7 @@ public class MasterDiscovery extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        startMasterDiscovery();
         NearbyConnectionsManager.getInstance(getApplicationContext()).registerPayloadListener(payloadListener);
         NearbyConnectionsManager.getInstance(getApplicationContext()).registerClientConnectionListener(clientConnectionListener);
     }
@@ -123,7 +126,7 @@ public class MasterDiscovery extends AppCompatActivity {
             }
         };
 
-        startMasterDiscovery();
+
 
     }
 
@@ -168,11 +171,11 @@ public class MasterDiscovery extends AppCompatActivity {
         masterDiscoveryService = new MasterDiscoveryService(this);
         masterDiscoveryService.start(endpointDiscoveryCallback)
                 .addOnSuccessListener((unused) -> {
-                    setStatus("Discovering...", true);
+                    setStatus("Searching...", true);
                 })
                 .addOnFailureListener(command -> {
                     if (((ApiException) command).getStatusCode() == 8002) {
-                        setStatus("Discovering...", true);
+                        setStatus("Still Searching...", true);
                     } else {
                         setStatus("Discovering Failed", false);
                         finish();

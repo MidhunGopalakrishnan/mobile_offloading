@@ -33,7 +33,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:justificationMode="inter_word"
-                    android:text="Searching Workers"
+                    android:text="Search Workers"
                     android:textColor="#FFFFFF"
                     android:textSize="30dp"
                     android:textStyle="bold" />
