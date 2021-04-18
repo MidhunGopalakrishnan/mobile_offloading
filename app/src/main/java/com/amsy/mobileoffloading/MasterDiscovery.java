@@ -38,7 +38,6 @@ public class MasterDiscovery extends AppCompatActivity {
 
 //    private Button bDiscoveryComplete;
     private RecyclerView rvConnectedDevices;
-
     private ConnectedDevicesAdapter connectedDevicesAdapter;
     private List<ConnectedDevice> connectedDevices = new ArrayList<>();
 
