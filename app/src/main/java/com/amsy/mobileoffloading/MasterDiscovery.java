@@ -36,7 +36,7 @@ import java.util.List;
 
 public class MasterDiscovery extends AppCompatActivity {
 
-    private Button bDiscoveryComplete;
+//    private Button bDiscoveryComplete;
     private RecyclerView rvConnectedDevices;
 
     private ConnectedDevicesAdapter connectedDevicesAdapter;
@@ -49,13 +49,22 @@ public class MasterDiscovery extends AppCompatActivity {
     private PayloadListener payloadListener;
     private PayloadCallback payloadCallback;
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_master_discovery);
 
-        bDiscoveryComplete = findViewById(R.id.b_discovery_done);
+//        bDiscoveryComplete = findViewById(R.id.b_discovery_done);
         rvConnectedDevices = findViewById(R.id.rv_connected_devices);
 
         connectedDevicesAdapter = new ConnectedDevicesAdapter(this, connectedDevices);
