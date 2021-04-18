@@ -27,8 +27,6 @@ import com.google.android.gms.nearby.connection.ConnectionResolution;
 import com.google.android.gms.nearby.connection.Payload;
 import com.google.android.gms.nearby.connection.PayloadCallback;
 import com.google.android.gms.nearby.connection.PayloadTransferUpdate;
-import com.google.android.gms.tasks.OnSuccessListener;
-
 import eo.view.batterymeter.BatteryMeterView;
 import pl.droidsonroids.gif.GifImageView;
 
@@ -92,7 +90,7 @@ public class WorkerAdvertisement extends AppCompatActivity {
         handler = new Handler(Looper.getMainLooper());
         runnable = () -> {
             refreshCardData();
-            handler.postDelayed(runnable, Constants.UPDATE_INTERVAL);
+            handler.postDelayed(runnable, Constants.UPDATE_INTERVAL_UI);
         };
     }
 
@@ -143,7 +141,7 @@ public class WorkerAdvertisement extends AppCompatActivity {
     }
     void showDialog(String masterInfo) {
        TextView title =  confirmationDialog.findViewById(R.id.dialogText);
-        title.setText(String.format("Master(%s) is trying to connect. Do you accept the connection ?", masterInfo));
+        title.setText(String.format("%s is trying to connect. Do you accept the connection ?", masterInfo));
         confirmationDialog.show();
     }
 
@@ -164,7 +162,7 @@ public class WorkerAdvertisement extends AppCompatActivity {
         super.onResume();
         advertiser.start(workerId, connectionListener,findViewById(R.id.statusText) );
         deviceStatsPublisher.start();
-        handler.postDelayed(runnable,  Constants.UPDATE_INTERVAL);
+        handler.postDelayed(runnable,  Constants.UPDATE_INTERVAL_UI);
 
     }
 

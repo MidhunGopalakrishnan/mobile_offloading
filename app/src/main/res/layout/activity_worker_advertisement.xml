@@ -7,7 +7,6 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#F7F9FC"
     android:padding="10dp"
     tools:context=".WorkerAdvertisement">
 
@@ -22,7 +21,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Worker Information"
-            android:textColor="#000"
+            android:layout_marginLeft="10dp"
+            android:textColor="#333333"
             android:textSize="30dp"
             android:textStyle="bold" />
 
@@ -30,9 +30,10 @@
             android:id="@+id/deviceId"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginLeft="10dp"
             android:layout_marginTop="10dp"
             android:text="Device Name:"
-            android:textColor="#000000"
+            android:textColor="#333333"
             android:textStyle="bold" />
 
         <LinearLayout
@@ -52,7 +53,7 @@
                     android:id="@+id/batteryCard"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:background="#1E88E5"
+                    android:background="#183Fd8"
                     android:padding="10dp">
 
                     <TextView
@@ -124,7 +125,7 @@
                     android:id="@+id/locationCard"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:background="#1E88E5"
+                    android:background="#183Fd8"
                     android:padding="10dp">
 
                     <TextView
@@ -183,7 +184,7 @@
                     android:id="@+id/workerCard"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:background="#FFFFFF"
+                    android:background="#183Fd8"
                     android:padding="10dp">
 
                     <TextView
@@ -192,7 +193,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="10dp"
                         android:text="Visibility Status"
-                        android:textColor="#000000"
+                        android:textColor="#FFFFFF"
                         android:textSize="30sp"
                         android:textStyle="bold" />
 
@@ -204,7 +205,7 @@
                         android:layout_below="@id/advertText"
                         android:layout_marginLeft="10dp"
                         android:text="Starting..."
-                        android:textColor="#000000"
+                        android:textColor="#FFFFFF"
                         android:textSize="20sp" />
 
                     <pl.droidsonroids.gif.GifImageView
