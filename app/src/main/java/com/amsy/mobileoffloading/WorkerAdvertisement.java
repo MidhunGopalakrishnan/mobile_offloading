@@ -1,8 +1,7 @@
 package com.amsy.mobileoffloading;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
 
+import androidx.appcompat.app.AppCompatActivity;
 import android.app.Dialog;
 import android.content.Intent;
 import android.graphics.Color;
@@ -16,19 +15,13 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import com.amsy.mobileoffloading.callback.ClientConnectionListener;
 import com.amsy.mobileoffloading.helper.Constants;
 import com.amsy.mobileoffloading.services.Advertiser;
 import com.amsy.mobileoffloading.services.DeviceStatisticsPublisher;
 import com.amsy.mobileoffloading.services.NearbyConnectionsManager;
-import com.google.android.gms.nearby.Nearby;
 import com.google.android.gms.nearby.connection.ConnectionInfo;
-import com.google.android.gms.nearby.connection.ConnectionLifecycleCallback;
 import com.google.android.gms.nearby.connection.ConnectionResolution;
-import com.google.android.gms.nearby.connection.Payload;
-import com.google.android.gms.nearby.connection.PayloadCallback;
-import com.google.android.gms.nearby.connection.PayloadTransferUpdate;
 import eo.view.batterymeter.BatteryMeterView;
 import pl.droidsonroids.gif.GifImageView;
 
@@ -82,7 +75,7 @@ public class WorkerAdvertisement extends AppCompatActivity {
             public void onDisconnected(String id) {
                 Log.d("WORKER", "Disconnected");
                 Log.d("WORKER", id);
-                Toast.makeText(WorkerAdvertisement.this, "Disconnected", Toast.LENGTH_SHORT).show();
+                finish();
             }
         };
     }
@@ -153,16 +146,15 @@ public class WorkerAdvertisement extends AppCompatActivity {
         setStatusText("Initializing...");
         super.onResume();
         NearbyConnectionsManager.getInstance(getApplicationContext()).registerClientConnectionListener(connectionListener);
-        advertiser.start(workerId, findViewById(R.id.statusText) );
+        advertiser.start(workerId, findViewById(R.id.statusText));
         deviceStatsPublisher.start();
         handler.postDelayed(runnable,  Constants.UPDATE_INTERVAL_UI);
     }
 
     @Override
     protected void onPause() {
-        setStatusText("Device is not discoverable");
         super.onPause();
-        NearbyConnectionsManager.getInstance(getApplicationContext()).registerClientConnectionListener(connectionListener);
+        NearbyConnectionsManager.getInstance(getApplicationContext()).unregisterClientConnectionListener(connectionListener);
         advertiser.stop();
         deviceStatsPublisher.stop();
         handler.removeCallbacks(runnable);

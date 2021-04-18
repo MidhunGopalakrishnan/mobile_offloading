@@ -3,6 +3,7 @@ package com.amsy.mobileoffloading;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Intent;
 import android.os.Bundle;
 import com.amsy.mobileoffloading.callback.ClientConnectionListener;
 import com.amsy.mobileoffloading.callback.PayloadListener;
@@ -65,9 +66,15 @@ public class WorkerComputation extends AppCompatActivity {
 
             @Override
             public void onDisconnected(String id) {
-
+                navBack();
             }
         };
+    }
+
+    private void navBack() {
+        Intent intent = new Intent(getApplicationContext(), WorkerAdvertisement.class);
+        startActivity(intent);
+        finish();
     }
 
     @Override

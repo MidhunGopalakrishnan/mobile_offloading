@@ -133,7 +133,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginLeft="10dp"
-                        android:text="Location Info"
+                        android:text="Device Location"
                         android:textColor="#ffff"
                         android:textSize="30sp"
                         android:textStyle="bold">
@@ -192,7 +192,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="10dp"
-                        android:text="Visibility Status"
+                        android:text="Worker Status"
                         android:textColor="#FFFFFF"
                         android:textSize="30sp"
                         android:textStyle="bold" />

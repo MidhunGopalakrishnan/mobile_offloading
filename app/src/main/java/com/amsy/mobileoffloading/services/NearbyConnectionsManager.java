@@ -55,7 +55,7 @@ public class NearbyConnectionsManager {
 
             @Override
             public void onDisconnected(@NonNull String endpointId) {
-                Toast.makeText(context, "DISCONNECTED", Toast.LENGTH_SHORT).show();
+                Toast.makeText(context, "Master Disconnected", Toast.LENGTH_SHORT).show();
                 for (ClientConnectionListener clientConnectionListener : clientConnectionListenerSet) {
                     try {
                         clientConnectionListener.onDisconnected(endpointId);
