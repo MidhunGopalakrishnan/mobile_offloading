@@ -97,6 +97,7 @@ public class WorkerComputation extends AppCompatActivity {
     public void finish() {
         super.finish();
         Advertiser.stopAdvertising(this.getApplicationContext());
+        NearbyConnectionsManager.getInstance(getApplicationContext()).disconnectFromEndpoint(masterId);
     }
 
 }

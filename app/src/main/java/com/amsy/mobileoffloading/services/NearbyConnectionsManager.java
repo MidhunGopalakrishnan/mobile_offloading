@@ -113,6 +113,11 @@ public class NearbyConnectionsManager {
         Nearby.getConnectionsClient(context).rejectConnection(endpointId);
     }
 
+    public void disconnectFromEndpoint(String endpointId) {
+        Log.d("WORKER", "Connection Disconnected");
+        Nearby.getConnectionsClient(context).disconnectFromEndpoint(endpointId);
+    }
+
     public Task<Void> advertise(String clientId, AdvertisingOptions advertisingOptions) {
        return Nearby.getConnectionsClient(context)
                 .startAdvertising(clientId, context.getPackageName(), connectionLifecycleCallback, advertisingOptions)
