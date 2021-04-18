@@ -72,7 +72,7 @@ public class WorkerComputation extends AppCompatActivity {
     }
 
     private void navBack() {
-        Intent intent = new Intent(getApplicationContext(), WorkerAdvertisement.class);
+        Intent intent = new Intent(getApplicationContext(), MainActivity.class);
         startActivity(intent);
         finish();
     }

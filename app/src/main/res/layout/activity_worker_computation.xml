@@ -17,13 +17,13 @@
         <pl.droidsonroids.gif.GifImageView
             android:id="@+id/working"
             android:layout_width="wrap_content"
-            android:layout_height="500dp"
+            android:layout_height="300dp"
             android:visibility="invisible"
             android:src="@drawable/working" />
         <pl.droidsonroids.gif.GifImageView
             android:id="@+id/waiting"
             android:layout_width="wrap_content"
-            android:layout_height="500dp"
+            android:layout_height="300dp"
             android:src="@drawable/waiting" />
         </RelativeLayout>
         <TextView android:layout_gravity="center"
