@@ -23,6 +23,7 @@ import com.amsy.mobileoffloading.helper.MatrixDS;
 import com.amsy.mobileoffloading.helper.PayloadConverter;
 import com.amsy.mobileoffloading.services.MasterDiscoveryService;
 import com.amsy.mobileoffloading.services.NearbyConnectionsManager;
+import com.amsy.mobileoffloading.services.WorkAllocator;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.nearby.connection.ConnectionInfo;
 import com.google.android.gms.nearby.connection.ConnectionResolution;
@@ -46,6 +47,7 @@ public class MasterDiscovery extends AppCompatActivity {
     private ClientConnectionListener clientConnectionListener;
     private PayloadListener payloadListener;
 
+    private WorkAllocator workAllocator;
     /* [row1 x cols1] * [row2 * cols2] */
     private int rows1 = 150;
     private int cols1 = 150;

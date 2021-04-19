@@ -6,6 +6,7 @@ import android.nfc.Tag;
 import android.os.Handler;
 import android.widget.Toast;
 
+import com.amsy.mobileoffloading.entities.ClientPayLoad;
 import com.amsy.mobileoffloading.entities.TagDataPayload;
 import com.amsy.mobileoffloading.entities.WorkData;
 import com.amsy.mobileoffloading.entities.WorkInfo;
@@ -13,6 +14,9 @@ import com.amsy.mobileoffloading.entities.Worker;
 import com.amsy.mobileoffloading.helper.Constants;
 import com.amsy.mobileoffloading.helper.FlushToFile;
 import com.amsy.mobileoffloading.helper.MatrixDS;
+import com.amsy.mobileoffloading.helper.PayloadConverter;
+import com.google.android.gms.common.api.Api;
+import com.google.android.gms.nearby.connection.Payload;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -130,11 +134,14 @@ public class WorkAllocator {
             workData.setRows(rows);
             workData.setCols(cols);
 
-            TagDataPayload payload = new TagDataPayload();
+            ClientPayLoad payload = new ClientPayLoad();
             payload.setTag(Constants.PayloadTags.WORK_DATA);
             payload.setData(workData);
             try {
-                //TODO find out communication here
+                //TODO find out communication here : Done
+                Payload payload1 = PayloadConverter.toPayload(payload);
+                Connector.sendToDevice(context, worker.getEndpointId(), payload1);
+
             } catch (Exception e) { //IOException e
                 if (!isAnyWrokerRunning(worker)){
                     workerQueue.add(worker);
@@ -215,11 +222,11 @@ public class WorkAllocator {
 
         for(Worker worker : workers){
             if(!worker.getWorkStatus().getStatusInfo().equals(Constants.WorkStatus.DISCONNECTED)){
-                TagDataPayload payload = new TagDataPayload();
+                ClientPayLoad payload = new ClientPayLoad();
                 payload.setTag(Constants.PayloadTags.FAREWELL);
 
-                //TODO: Send data to device on connection.
-
+                //TODO: Send data to device on connection. Done
+                Connector.sendToDevice(context, worker.getEndpointId(), payload);
                 NearbyConnectionsManager.getInstance(context).rejectConnection(worker.getEndpointId());
             }
         }
