@@ -37,4 +37,5 @@ public class FlushToFile {
         FlushToFile.writeTextToFile(context, filename, false, stringBuilder.toString());
     }
 
+
 }

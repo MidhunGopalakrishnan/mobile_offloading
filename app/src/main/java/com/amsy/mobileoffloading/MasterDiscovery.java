@@ -18,6 +18,8 @@ import com.amsy.mobileoffloading.entities.ClientPayLoad;
 import com.amsy.mobileoffloading.entities.ConnectedDevice;
 import com.amsy.mobileoffloading.entities.DeviceStatistics;
 import com.amsy.mobileoffloading.helper.Constants;
+import com.amsy.mobileoffloading.helper.FlushToFile;
+import com.amsy.mobileoffloading.helper.MatrixDS;
 import com.amsy.mobileoffloading.helper.PayloadConverter;
 import com.amsy.mobileoffloading.services.MasterDiscoveryService;
 import com.amsy.mobileoffloading.services.NearbyConnectionsManager;
@@ -44,6 +46,15 @@ public class MasterDiscovery extends AppCompatActivity {
     private ClientConnectionListener clientConnectionListener;
     private PayloadListener payloadListener;
 
+    /* [row1 x cols1] * [row2 * cols2] */
+    private int rows1 = 150;
+    private int cols1 = 150;
+    private int rows2 = 150;
+    private int cols2 = 150;
+
+    private int[][] m1;
+    private int[][] m2;
+
     @Override
     protected void onPause() {
         super.onPause();
@@ -61,12 +72,40 @@ public class MasterDiscovery extends AppCompatActivity {
         NearbyConnectionsManager.getInstance(getApplicationContext()).registerClientConnectionListener(clientConnectionListener);
     }
 
+
+    private void computeOnOnlyMaster(){
+        m1 = MatrixDS.createMatrix(rows1,cols1);
+        m2 = MatrixDS.createMatrix(rows2,rows2);
+        long beginTime = System.currentTimeMillis();
+
+        int[][] result = new int[rows1][cols2];
+        for(int i = 0 ; i < rows1; i++){
+            for(int j = 0 ; j < cols2; j++){
+                result[i][j] = 0;
+                for(int k = 0 ; k < cols1; k++){
+                    result[i][j] += m1[j][k] * m2[k][j];
+                }
+            }
+        }
+        //Computation is complete here
+
+        long finishTime = System.currentTimeMillis();
+        long timeTaken = finishTime - beginTime;
+
+        FlushToFile.writeTextToFile(getApplicationContext(), "compute_on_only_master_time.txt", false, timeTaken +" milliseconds");
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_master_discovery);
 
         rvConnectedDevices = findViewById(R.id.rv_connected_devices);
+
+        //TODO: This can be moved inside a button if we dont want to put it on the main thread
+        Log.d("MasterDiscovery" , "Starting computing matrix multiplication on only master");
+        computeOnOnlyMaster();
+        Log.d("MasterDiscovery" , "Completed computing matrix multiplication on only master");
 
         connectedDevicesAdapter = new ConnectedDevicesAdapter(this, connectedDevices);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getApplicationContext());
