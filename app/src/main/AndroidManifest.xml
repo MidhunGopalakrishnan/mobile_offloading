@@ -17,7 +17,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.MobileOffloading">
-        <activity android:name=".WorkerComputation"></activity>
+        <activity android:name=".MasterActivity"></activity>
+        <activity android:name=".WorkerComputation" />
         <activity android:name=".WorkerAdvertisement" />
         <activity android:name=".MasterDiscovery" />
         <activity android:name=".MainActivity">

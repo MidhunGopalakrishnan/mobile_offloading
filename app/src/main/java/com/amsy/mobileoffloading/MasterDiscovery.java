@@ -5,10 +5,14 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 
 import com.amsy.mobileoffloading.adapters.ConnectedDevicesAdapter;
@@ -18,9 +22,10 @@ import com.amsy.mobileoffloading.entities.ClientPayLoad;
 import com.amsy.mobileoffloading.entities.ConnectedDevice;
 import com.amsy.mobileoffloading.entities.DeviceStatistics;
 import com.amsy.mobileoffloading.helper.Constants;
-import com.amsy.mobileoffloading.helper.FlushToFile;
-import com.amsy.mobileoffloading.helper.MatrixDS;
+//import com.amsy.mobileoffloading.helper.FlushToFile;
+//import com.amsy.mobileoffloading.helper.MatrixDS;
 import com.amsy.mobileoffloading.helper.PayloadConverter;
+import com.amsy.mobileoffloading.services.Connector;
 import com.amsy.mobileoffloading.services.MasterDiscoveryService;
 import com.amsy.mobileoffloading.services.NearbyConnectionsManager;
 import com.amsy.mobileoffloading.services.WorkAllocator;
@@ -40,6 +45,7 @@ import java.util.List;
 public class MasterDiscovery extends AppCompatActivity {
 
     private RecyclerView rvConnectedDevices;
+    private Button assignWork;
     private ConnectedDevicesAdapter connectedDevicesAdapter;
     private List<ConnectedDevice> connectedDevices = new ArrayList<>();
 
@@ -47,8 +53,8 @@ public class MasterDiscovery extends AppCompatActivity {
     private ClientConnectionListener clientConnectionListener;
     private PayloadListener payloadListener;
 
-    private WorkAllocator workAllocator;
-    /* [row1 x cols1] * [row2 * cols2] */
+/*    private WorkAllocator workAllocator;
+    // [row1 x cols1] * [row2 * cols2]
     private int rows1 = 150;
     private int cols1 = 150;
     private int rows2 = 150;
@@ -56,6 +62,7 @@ public class MasterDiscovery extends AppCompatActivity {
 
     private int[][] m1;
     private int[][] m2;
+*/
 
     @Override
     protected void onPause() {
@@ -74,7 +81,7 @@ public class MasterDiscovery extends AppCompatActivity {
         NearbyConnectionsManager.getInstance(getApplicationContext()).registerClientConnectionListener(clientConnectionListener);
     }
 
-
+/*
     private void computeOnOnlyMaster(){
         m1 = MatrixDS.createMatrix(rows1,cols1);
         m2 = MatrixDS.createMatrix(rows2,rows2);
@@ -96,19 +103,34 @@ public class MasterDiscovery extends AppCompatActivity {
 
         FlushToFile.writeTextToFile(getApplicationContext(), "compute_on_only_master_time.txt", false, timeTaken +" milliseconds");
     }
-
+*/
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_master_discovery);
 
         rvConnectedDevices = findViewById(R.id.rv_connected_devices);
-
+        assignWork = findViewById(R.id.assignTask);
+        assignWork.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ArrayList<ConnectedDevice> readyDevices = getDevicesInReadyState();
+                if(readyDevices.size() == 0){
+                    Toast.makeText(getApplicationContext(), "No worker Available at the moment", Toast.LENGTH_LONG).show();
+                    onBackPressed();
+                }else{
+                    masterDiscoveryService.stop();
+                    startMasterActivity(readyDevices);
+                    finish();
+                }
+            }
+        });
+/*
         //TODO: This can be moved inside a button if we dont want to put it on the main thread
         Log.d("MasterDiscovery" , "Starting computing matrix multiplication on only master");
         computeOnOnlyMaster();
         Log.d("MasterDiscovery" , "Completed computing matrix multiplication on only master");
-
+*/
         connectedDevicesAdapter = new ConnectedDevicesAdapter(this, connectedDevices);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getApplicationContext());
         rvConnectedDevices.setLayoutManager(linearLayoutManager);
@@ -169,6 +191,34 @@ public class MasterDiscovery extends AppCompatActivity {
 
 
 
+    }
+
+    private ArrayList<ConnectedDevice> getDevicesInReadyState() {
+        ArrayList<ConnectedDevice> res = new ArrayList<>();
+        for (int i = 0; i < connectedDevices.size(); i++) {
+            if (connectedDevices.get(i).getRequestStatus().equals(Constants.RequestStatus.ACCEPTED)) {
+                if (connectedDevices.get(i).getDeviceStats().getBatteryLevel() > WorkAllocator.ThresholdsHolder.MINIMUM_BATTERY_LEVEL) {
+                    res.add(connectedDevices.get(i));
+                } else {
+//                    NearbyConnectionsManager.getInstance(getApplicationContext()).rejectConnection(connectedDevices.get(i).getEndpointId());
+
+                    ClientPayLoad tPayload = new ClientPayLoad();
+                    tPayload.setTag(Constants.PayloadTags.DISCONNECTED);
+
+                    Connector.sendToDevice(getApplicationContext(), connectedDevices.get(i).getEndpointId(), tPayload);
+                }
+            } else {
+//                NearbyConnectionsManager.getInstance(getApplicationContext()).rejectConnection(connectedDevices.get(i).getEndpointId());
+
+                Log.d("OFLOD", "LOOPING");
+                ClientPayLoad tPayload = new ClientPayLoad();
+                tPayload.setTag(Constants.PayloadTags.DISCONNECTED);
+
+                Connector.sendToDevice(getApplicationContext(), connectedDevices.get(i).getEndpointId(), tPayload);
+            }
+
+        }
+        return res;
     }
 
     private void updateConnectedDeviceRequestStatus(String endpointId, String status) {
@@ -257,5 +307,15 @@ public class MasterDiscovery extends AppCompatActivity {
     public void finish() {
         super.finish();
         masterDiscoveryService.stop();
+    }
+
+    private void startMasterActivity(ArrayList<ConnectedDevice> connectedDevices) {
+        Intent intent = new Intent(getApplicationContext(), MasterActivity.class);
+
+        Bundle bundle = new Bundle();
+        bundle.putSerializable(Constants.CONNECTED_DEVICES, connectedDevices);
+        intent.putExtras(bundle);
+
+        startActivity(intent);
     }
 }

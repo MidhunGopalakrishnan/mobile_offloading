@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.location.Location;
 
+import com.amsy.mobileoffloading.callback.FusedLocationListener;
 import com.amsy.mobileoffloading.helper.Constants;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
@@ -55,6 +56,30 @@ public class LocationService {
         }
     }
 
+    @SuppressLint("MissingPermission")
+    public void requestLocationUpdates(FusedLocationListener fusedLocationListener) {
+        LocationRequest locationRequest = LocationRequest.create();
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        locationRequest.setInterval(1 * 4000);
+
+        this.locationCallback = new LocationCallback() {
+            @Override
+            public void onLocationResult(LocationResult locationResult) {
+//                for (Location location : locationResult.getLocations()) {
+//                    fusedLocationListener.onLocationAvailable(location);
+//                }
+                fusedLocationListener.onLocationAvailable(locationResult.getLastLocation());
+            }
+        };
+
+        fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, context.getMainLooper());
+    }
+
+    public void removeLocationUpdates() {
+        if (this.locationCallback != null) {
+            fusedLocationProviderClient.removeLocationUpdates(this.locationCallback);
+        }
+    }
 
 }
 

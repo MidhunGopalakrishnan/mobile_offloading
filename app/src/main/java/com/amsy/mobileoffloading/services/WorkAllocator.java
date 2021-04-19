@@ -91,16 +91,22 @@ public class WorkAllocator {
     public void beginDistributedComputation(){
         beginTime = System.currentTimeMillis();
 
-        sendWorkersToQueue();
+        sendWorkersToQueue(); //addWorkersToQueue
 
-        addWorkToQueue();
-
-        startWorkAllocation();
+        addWorkToQueue(); //addWorkToQueue
+        initiateWorkAssignment();
+        startWorkAllocation(); //startWorkScheduler
 
     }
 
     private void startWorkAllocation(){
         for(int i = 0; i < workerQueue.size();i++){
+            allocateWork();
+        }
+    }
+
+    private void initiateWorkAssignment() {
+        for (int i = 0; i < workerQueue.size(); i++) {
             allocateWork();
         }
     }
@@ -183,6 +189,15 @@ public class WorkAllocator {
         }
         return false;
     }
+
+    public void checkWorkCompletion(int workAmount) {
+        if (workAmount == totalpartitions) {
+            sendByeToWorkers();
+        } else if (partitionResults.size() == totalpartitions) {
+            sendByeToWorkers();
+        }
+    }
+
 
     public void updateWorkStatus(Worker worker, WorkInfo workInfo){
         if(partitionResults.size() == totalpartitions){
