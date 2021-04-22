@@ -5,9 +5,18 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.TextView;
+
 import com.amsy.mobileoffloading.callback.ClientConnectionListener;
 import com.amsy.mobileoffloading.callback.PayloadListener;
+import com.amsy.mobileoffloading.entities.ClientPayLoad;
+import com.amsy.mobileoffloading.entities.TagDataPayload;
+import com.amsy.mobileoffloading.entities.WorkData;
 import com.amsy.mobileoffloading.helper.Constants;
+import com.amsy.mobileoffloading.helper.DataTransfer;
+import com.amsy.mobileoffloading.helper.MatrixDS;
+import com.amsy.mobileoffloading.helper.PayloadConverter;
 import com.amsy.mobileoffloading.services.Advertiser;
 import com.amsy.mobileoffloading.services.DeviceStatisticsPublisher;
 import com.amsy.mobileoffloading.services.NearbyConnectionsManager;
@@ -16,11 +25,20 @@ import com.google.android.gms.nearby.connection.ConnectionResolution;
 import com.google.android.gms.nearby.connection.Payload;
 import com.google.android.gms.nearby.connection.PayloadTransferUpdate;
 
+import org.w3c.dom.Text;
+
+import java.io.IOException;
+import java.io.Serializable;
+
+import pl.droidsonroids.gif.GifImageView;
+
 public class WorkerComputation extends AppCompatActivity {
     private String masterId;
     private DeviceStatisticsPublisher deviceStatsPublisher;
     private ClientConnectionListener connectionListener;
     private PayloadListener payloadCallback;
+    private int currentPartitionIndex;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -29,6 +47,24 @@ public class WorkerComputation extends AppCompatActivity {
         startDeviceStatsPublisher();
         setConnectionCallback();
         connectToMaster();
+
+
+    }
+    public void setStatusText(String text, boolean isWorking) {
+        //UI Textview
+        TextView statusText = findViewById(R.id.statusText);
+        statusText.setText(text);
+        GifImageView waiting = findViewById(R.id.waiting);
+        waiting.setVisibility(isWorking ? View.INVISIBLE: View.VISIBLE);
+        GifImageView working = findViewById(R.id.working);
+        working.setVisibility(isWorking ? View.VISIBLE: View.INVISIBLE);
+    }
+
+    public void setPartitionText( int count) {
+        TextView partitions = findViewById(R.id.partitions);
+        partitions.setText("Vectors multiplied: " + count);
+        TextView dispCount = findViewById(R.id.count);
+        dispCount.setText(count);
     }
     private void extractBundle() {
         Bundle bundle = getIntent().getExtras();
@@ -43,7 +79,7 @@ public class WorkerComputation extends AppCompatActivity {
         payloadCallback = new PayloadListener() {
             @Override
             public void onPayloadReceived(@NonNull String endpointId, @NonNull Payload payload) {
-
+                startWorking(payload);
             }
 
             @Override
@@ -100,4 +136,60 @@ public class WorkerComputation extends AppCompatActivity {
         NearbyConnectionsManager.getInstance(getApplicationContext()).disconnectFromEndpoint(masterId);
     }
 
+
+    public void onDisconnect(View view) {
+        WorkStatus workStatus = new WorkStatus();
+        workStatus.setPartitionIndex(currentPartitionIndex);
+        workStatus.setStatus(Constants.WorkStatus.DISCONNECTED);
+
+        ClientPayLoad tPayload1 = new ClientPayLoad();
+        tPayload1.setTag(Constants.PayloadTags.WORK_STATUS);
+        tPayload1.setData(workStatus);
+
+        DataTransfer.sendPayload(getApplicationContext(), masterId, tPayload1);
+        navBack();
+    }
+
+    public void startWorking(Payload payload) {
+        WorkStatus workStatus = new WorkStatus();
+        ClientPayLoad sendPayload = new ClientPayLoad();
+        sendPayload.setTag(Constants.PayloadTags.WORK_STATUS);
+
+        try {
+                ClientPayLoad receivedPayload = PayloadConverter.fromPayload(payload);
+                if (receivedPayload.getTag().equals(Constants.PayloadTags.WORK_DATA)) {
+                    setStatusText("Working now", true);
+
+                    WorkData workData = (WorkData) receivedPayload.getData();
+                    int dotProduct = MatrixDS.getDotProduct(workData.getRows(), workData.getCols());
+
+
+                    currentPartitionIndex += workData.getPartitionIndex();
+                    setPartitionText(currentPartitionIndex);
+                    workStatus.setPartitionIndex(currentPartitionIndex);
+                    workStatus.setResult(dotProduct);
+
+                    workStatus.setStatus(Constants.WorkStatus.WORKING);
+                    sendPayload.setData(workStatus);
+                    DataTransfer.sendPayload(getApplicationContext(), masterId, sendPayload);
+
+                } else if (receivedPayload.getTag().equals(Constants.PayloadTags.FAREWELL)) {
+                    setStatusText("Work Done !!", true);
+
+                    workStatus.setStatus(Constants.WorkStatus.FINISHED);
+                    sendPayload.setData(workStatus);
+                    DataTransfer.sendPayload(getApplicationContext(), masterId, sendPayload);
+
+                } else if (receivedPayload.getTag().equals(Constants.PayloadTags.DISCONNECTED)) {
+                    navBack();
+                }
+
+            } catch (IOException | ClassNotFoundException e) {
+                e.printStackTrace();
+            }
+    }
+
+
+
 }
+

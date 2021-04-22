@@ -61,7 +61,7 @@
                         android:layout_marginBottom="16dp"
                         android:text="Accept"
                         app:backgroundTint="#4CAF50"
-                        app:cornerRadius="15dp" />
+                        app:cornerRadius="5dp" />
 
                     <Button
                         android:id="@+id/reject"
@@ -71,7 +71,7 @@
                         android:layout_margin="10dp"
                         android:text="Reject"
                         app:backgroundTint="#EF0C0C"
-                        app:cornerRadius="15dp" />
+                        app:cornerRadius="5dp" />
                 </RelativeLayout>
             </LinearLayout>
     </androidx.cardview.widget.CardView>
