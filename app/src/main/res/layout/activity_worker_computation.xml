@@ -57,10 +57,10 @@
                         android:textStyle="bold"/>
 
                     <TextView
+                        android:layout_alignParentRight="true"
                         android:id="@+id/statusText"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_below="@id/workStatus"
                         android:layout_marginLeft="10dp"
                         android:layout_marginTop="3dp"
                         android:text="Waiting for work..."
@@ -70,18 +70,18 @@
                         android:id="@+id/partitions"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_below="@id/statusText"
+                        android:layout_below="@id/workStatus"
                         android:layout_marginLeft="10dp"
                         android:layout_marginBottom="10dp"
                         android:layout_marginTop="3dp"
-                        android:text="Vectors multiplied: 0"
+                        android:text="Vectors multiplied"
                         android:textColor="#ffff" />
 
                     <TextView
                         android:id="@+id/count"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_alignParentRight="true"
+                        android:layout_below="@id/partitions"
                         android:layout_marginRight="13dp"
                         android:text="0"
                         android:textColor="#FFFFFF"

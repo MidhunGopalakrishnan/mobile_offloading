@@ -53,17 +53,6 @@ public class MasterDiscovery extends AppCompatActivity {
     private ClientConnectionListener clientConnectionListener;
     private PayloadListener payloadListener;
 
-/*    private WorkAllocator workAllocator;
-    // [row1 x cols1] * [row2 * cols2]
-    private int rows1 = 150;
-    private int cols1 = 150;
-    private int rows2 = 150;
-    private int cols2 = 150;
-
-    private int[][] m1;
-    private int[][] m2;
-*/
-
     @Override
     protected void onPause() {
         super.onPause();
@@ -81,56 +70,12 @@ public class MasterDiscovery extends AppCompatActivity {
         NearbyConnectionsManager.getInstance(getApplicationContext()).registerClientConnectionListener(clientConnectionListener);
     }
 
-/*
-    private void computeOnOnlyMaster(){
-        m1 = MatrixDS.createMatrix(rows1,cols1);
-        m2 = MatrixDS.createMatrix(rows2,rows2);
-        long beginTime = System.currentTimeMillis();
-
-        int[][] result = new int[rows1][cols2];
-        for(int i = 0 ; i < rows1; i++){
-            for(int j = 0 ; j < cols2; j++){
-                result[i][j] = 0;
-                for(int k = 0 ; k < cols1; k++){
-                    result[i][j] += m1[j][k] * m2[k][j];
-                }
-            }
-        }
-        //Computation is complete here
-
-        long finishTime = System.currentTimeMillis();
-        long timeTaken = finishTime - beginTime;
-
-        FlushToFile.writeTextToFile(getApplicationContext(), "compute_on_only_master_time.txt", false, timeTaken +" milliseconds");
-    }
-*/
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_master_discovery);
 
         rvConnectedDevices = findViewById(R.id.rv_connected_devices);
-        assignWork = findViewById(R.id.assignTask);
-        assignWork.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                ArrayList<ConnectedDevice> readyDevices = getDevicesInReadyState();
-                if(readyDevices.size() == 0){
-                    Toast.makeText(getApplicationContext(), "No worker Available at the moment", Toast.LENGTH_LONG).show();
-                    onBackPressed();
-                }else{
-                    masterDiscoveryService.stop();
-                    startMasterActivity(readyDevices);
-                    finish();
-                }
-            }
-        });
-/*
-        //TODO: This can be moved inside a button if we dont want to put it on the main thread
-        Log.d("MasterDiscovery" , "Starting computing matrix multiplication on only master");
-        computeOnOnlyMaster();
-        Log.d("MasterDiscovery" , "Completed computing matrix multiplication on only master");
-*/
         connectedDevicesAdapter = new ConnectedDevicesAdapter(this, connectedDevices);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getApplicationContext());
         rvConnectedDevices.setLayoutManager(linearLayoutManager);
@@ -190,7 +135,19 @@ public class MasterDiscovery extends AppCompatActivity {
         };
 
 
+    }
 
+
+    public void assignTasks(View view) {
+        ArrayList<ConnectedDevice> readyDevices = getDevicesInReadyState();
+        if (readyDevices.size() == 0) {
+            Toast.makeText(getApplicationContext(), "No worker Available at the moment", Toast.LENGTH_LONG).show();
+            onBackPressed();
+        } else {
+            masterDiscoveryService.stop();
+            startMasterActivity(readyDevices);
+            finish();
+        }
     }
 
     private ArrayList<ConnectedDevice> getDevicesInReadyState() {
@@ -200,16 +157,12 @@ public class MasterDiscovery extends AppCompatActivity {
                 if (connectedDevices.get(i).getDeviceStats().getBatteryLevel() > WorkAllocator.ThresholdsHolder.MINIMUM_BATTERY_LEVEL) {
                     res.add(connectedDevices.get(i));
                 } else {
-//                    NearbyConnectionsManager.getInstance(getApplicationContext()).rejectConnection(connectedDevices.get(i).getEndpointId());
-
                     ClientPayLoad tPayload = new ClientPayLoad();
                     tPayload.setTag(Constants.PayloadTags.DISCONNECTED);
 
                     Connector.sendToDevice(getApplicationContext(), connectedDevices.get(i).getEndpointId(), tPayload);
                 }
             } else {
-//                NearbyConnectionsManager.getInstance(getApplicationContext()).rejectConnection(connectedDevices.get(i).getEndpointId());
-
                 Log.d("OFLOD", "LOOPING");
                 ClientPayLoad tPayload = new ClientPayLoad();
                 tPayload.setTag(Constants.PayloadTags.DISCONNECTED);
@@ -287,14 +240,21 @@ public class MasterDiscovery extends AppCompatActivity {
     }
 
     private void updateDeviceStats(String endpointId, DeviceStatistics deviceStats) {
+        canAssign(deviceStats);
         for (int i = 0; i < connectedDevices.size(); i++) {
             if (connectedDevices.get(i).getEndpointId().equals(endpointId)) {
                 connectedDevices.get(i).setDeviceStats(deviceStats);
-                Toast.makeText(getApplicationContext(), "Success: updated battery level: can proceed", Toast.LENGTH_SHORT).show();
+
+//                Toast.makeText(getApplicationContext(), "Success: updated battery level: can proceed", Toast.LENGTH_SHORT).show();
                 connectedDevices.get(i).setRequestStatus(Constants.RequestStatus.ACCEPTED);
                 connectedDevicesAdapter.notifyItemChanged(i);
             }
         }
+    }
+
+    void canAssign(DeviceStatistics deviceStats) {
+        Button assignButton = findViewById(R.id.assignTask);
+        assignButton.setVisibility(deviceStats.getBatteryLevel() > WorkAllocator.ThresholdsHolder.MINIMUM_BATTERY_LEVEL ? View.VISIBLE : View.INVISIBLE);
     }
 
     void setStatus(String text, boolean search) {
@@ -319,4 +279,5 @@ public class MasterDiscovery extends AppCompatActivity {
 
         startActivity(intent);
     }
+
 }

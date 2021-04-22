@@ -76,8 +76,8 @@
                 android:layout_height="wrap_content"
                 android:padding="10dp"
                 android:text="Available Devices"
-                android:textStyle="bold"
-                android:textSize="16dp" />
+                android:textSize="16dp"
+                android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/discovery"
@@ -111,8 +111,9 @@
                 android:id="@+id/assignTask"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-
-                android:text="Assign Task" />
+                android:onClick="assignTasks"
+                android:text="Assign Task"
+                android:visibility="invisible" />
         </LinearLayout>
     </RelativeLayout>
 </LinearLayout>
