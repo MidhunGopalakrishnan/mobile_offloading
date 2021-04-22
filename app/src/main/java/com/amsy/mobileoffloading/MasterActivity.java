@@ -228,24 +228,21 @@ public class MasterActivity extends AppCompatActivity {
 
     private void setupDeviceBatteryStatsCollector() {
         handler = new Handler();
-        runnable = new Runnable() {
-            @Override
-            public void run() {
-                DeviceStatistics deviceStats = Device.getStats(getApplicationContext());
-                Location location = LocationService.getInstance(getApplicationContext()).getLastAvailableLocation();
+        runnable = () -> {
+            DeviceStatistics deviceStats = Device.getStats(getApplicationContext());
+            Location location = LocationService.getInstance(getApplicationContext()).getLastAvailableLocation();
 
-                if (location != null) {
-                    deviceStats.setLatitude(location.getLatitude());
-                    deviceStats.setLongitude(location.getLongitude());
-                    deviceStats.setLocationValid(true);
-                }
-
-                String deviceStatsStr = deviceStats.getBatteryLevel() + "%"
-                        + "\t" + (deviceStats.isCharging() ? "CHARGING" : "NOT CHARGING");
-                FlushToFile.writeTextToFile(getApplicationContext(), "master_battery.txt", true, deviceStatsStr);
-
-                handler.postDelayed(runnable, 5 * 1000);
+            if (location != null) {
+                deviceStats.setLatitude(location.getLatitude());
+                deviceStats.setLongitude(location.getLongitude());
+                deviceStats.setLocationValid(true);
             }
+
+            String deviceStatsStr = deviceStats.getBatteryLevel() + "%"
+                    + "\t" + (deviceStats.isCharging() ? "CHARGING" : "NOT CHARGING");
+            FlushToFile.writeTextToFile(getApplicationContext(), "master_battery.txt", true, deviceStatsStr);
+
+            handler.postDelayed(runnable, 5 * 1000);
         };
     }
 

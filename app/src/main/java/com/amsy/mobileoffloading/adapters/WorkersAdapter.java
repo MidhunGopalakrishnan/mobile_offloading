@@ -4,6 +4,7 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -14,6 +15,8 @@ import com.amsy.mobileoffloading.entities.Worker;
 import com.amsy.mobileoffloading.helper.Constants;
 
 import java.util.List;
+
+import eo.view.batterymeter.BatteryMeterView;
 
 public class WorkersAdapter extends RecyclerView.Adapter<WorkersAdapter.ViewHolder>{
     private Context context;
@@ -37,8 +40,7 @@ public class WorkersAdapter extends RecyclerView.Adapter<WorkersAdapter.ViewHold
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         holder.setClientId(workers.get(position).getEndpointId(), workers.get(position).getEndpointName());
         holder.setWorkStatus(workers.get(position).getWorkStatus().getStatusInfo());
-        holder.setBatteryLevel(workers.get(position).getDeviceStats().getBatteryLevel());
-        holder.setChargingStatus(workers.get(position).getDeviceStats().isCharging());
+        holder.setBatteryLevel(workers.get(position).getDeviceStats().getBatteryLevel(), workers.get(position).getDeviceStats().isCharging());
         holder.setWorkFinished(workers.get(position).getWorkAmount());
         holder.setLocation(workers.get(position).getDistanceFromMaster());
     }
@@ -53,7 +55,7 @@ public class WorkersAdapter extends RecyclerView.Adapter<WorkersAdapter.ViewHold
         private TextView tvClientId;
         private TextView tvWorkStatus;
         private TextView tvBatteryLevel;
-        private TextView tvChargingStatus;
+        private BatteryMeterView tvChargingStatus;
         private TextView tvWorkFinished;
         private TextView tvLocation;
 
@@ -63,47 +65,40 @@ public class WorkersAdapter extends RecyclerView.Adapter<WorkersAdapter.ViewHold
             tvClientId = itemView.findViewById(R.id.tv_client_id);
             tvWorkStatus = itemView.findViewById(R.id.tv_work_status);
             tvBatteryLevel = itemView.findViewById(R.id.tv_battery_level);
-            tvChargingStatus = itemView.findViewById(R.id.tv_charging_status);
+            tvChargingStatus = itemView.findViewById(R.id.workerBattery);
             tvWorkFinished = itemView.findViewById(R.id.tv_work_finished);
             tvLocation = itemView.findViewById(R.id.tv_location);
-
 
         }
 
         public void setClientId(String endpointId, String endpointName) {
-            this.tvClientId.setText(endpointId + " (" + endpointName + ")");
+            this.tvClientId.setText(endpointName.toUpperCase() + " (" + endpointId.toUpperCase() + ")");
         }
 
         public void setWorkStatus(String workStatus) {
             if (workStatus.equals(Constants.WorkStatus.WORKING)) {
-                this.tvWorkStatus.setText("working...");
+                this.tvWorkStatus.setText("WORKING...");
             } else if (workStatus.equals(Constants.WorkStatus.FINISHED)) {
-                this.tvWorkStatus.setText("finished");
+                this.tvWorkStatus.setText("FINISHED");
             } else if (workStatus.equals(Constants.WorkStatus.FAILED)) {
-                this.tvWorkStatus.setText("failed");
+                this.tvWorkStatus.setText("FAILED");
             } else {
-                this.tvWorkStatus.setText("disconnected");
+                this.tvWorkStatus.setText("DISCONNECTED");
             }
         }
 
-        public void setBatteryLevel(int batteryLevel) {
+        public void setBatteryLevel(int batteryLevel, boolean charging) {
             this.tvBatteryLevel.setText(batteryLevel + "%");
-        }
-
-        public void setChargingStatus(boolean charging) {
-            if (charging) {
-                this.tvChargingStatus.setText("charging");
-            } else {
-                this.tvChargingStatus.setText("not charging");
-            }
+            this.tvChargingStatus.setCharging(charging);
+            this.tvChargingStatus.setChargeLevel(batteryLevel);
         }
 
         public void setWorkFinished(int amountWork) {
-            tvWorkFinished.setText((int) (amountWork) + "");
+            tvWorkFinished.setText( amountWork +"");
         }
 
         public void setLocation(float distance) {
-            tvLocation.setText(String.format("%.2f", distance) + "m away");
+            tvLocation.setText(String.format("%.2f", distance) + " meters");
         }
     }
 }

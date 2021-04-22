@@ -63,7 +63,7 @@ public class ConnectedDevicesAdapter extends RecyclerView.Adapter<ConnectedDevic
         }
 
         public void setClientId(String endpointId, String endpointName) {
-            this.ClientId.setText(endpointName  + "\n(" + endpointId + ")");
+            this.ClientId.setText(endpointName.toUpperCase()  + "\n(" + endpointId.toUpperCase() + ")");
         }
 
         public void setBatteryLevel(int batteryLevel) {
