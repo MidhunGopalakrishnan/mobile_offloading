@@ -1,13 +1,9 @@
 package com.amsy.mobileoffloading.services;
 
-import android.app.usage.ConfigurationStats;
 import android.content.Context;
-import android.nfc.Tag;
 import android.os.Handler;
 import android.widget.Toast;
-
 import com.amsy.mobileoffloading.entities.ClientPayLoad;
-import com.amsy.mobileoffloading.entities.TagDataPayload;
 import com.amsy.mobileoffloading.entities.WorkData;
 import com.amsy.mobileoffloading.entities.WorkInfo;
 import com.amsy.mobileoffloading.entities.Worker;
@@ -15,11 +11,7 @@ import com.amsy.mobileoffloading.helper.Constants;
 import com.amsy.mobileoffloading.helper.FlushToFile;
 import com.amsy.mobileoffloading.helper.MatrixDS;
 import com.amsy.mobileoffloading.helper.PayloadConverter;
-import com.google.android.gms.common.api.Api;
 import com.google.android.gms.nearby.connection.Payload;
-
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Hashtable;

@@ -11,7 +11,6 @@ import android.widget.TextView;
 import com.amsy.mobileoffloading.callback.ClientConnectionListener;
 import com.amsy.mobileoffloading.callback.PayloadListener;
 import com.amsy.mobileoffloading.entities.ClientPayLoad;
-import com.amsy.mobileoffloading.entities.TagDataPayload;
 import com.amsy.mobileoffloading.entities.WorkData;
 import com.amsy.mobileoffloading.entities.WorkInfo;
 import com.amsy.mobileoffloading.helper.Constants;
@@ -25,12 +24,7 @@ import com.google.android.gms.nearby.connection.ConnectionInfo;
 import com.google.android.gms.nearby.connection.ConnectionResolution;
 import com.google.android.gms.nearby.connection.Payload;
 import com.google.android.gms.nearby.connection.PayloadTransferUpdate;
-
-import org.w3c.dom.Text;
-
 import java.io.IOException;
-import java.io.Serializable;
-
 import pl.droidsonroids.gif.GifImageView;
 
 public class WorkerComputation extends AppCompatActivity {
