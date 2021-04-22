@@ -56,8 +56,6 @@ public class WorkerComputation extends AppCompatActivity {
     }
 
     public void setPartitionText( int count) {
-        TextView partitions = findViewById(R.id.partitions);
-        partitions.setText("Vectors multiplied: " + count);
         TextView dispCount = findViewById(R.id.count);
         //TODO : ANVESH
         dispCount.setText(count + "");
@@ -162,7 +160,7 @@ public class WorkerComputation extends AppCompatActivity {
 
                     currentPartitionIndex += workData.getPartitionIndex();
                     setPartitionText(currentPartitionIndex);
-                    workStatus.setPartitionIndexInfo(currentPartitionIndex);
+                    workStatus.setPartitionIndexInfo(workData.getPartitionIndex());
                     workStatus.setResultInfo(dotProduct);
 
                     workStatus.setStatusInfo(Constants.WorkStatus.WORKING);
