@@ -59,7 +59,7 @@ public class WorkersAdapter extends RecyclerView.Adapter<WorkersAdapter.ViewHold
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
-            /*
+
             tvClientId = itemView.findViewById(R.id.tv_client_id);
             tvWorkStatus = itemView.findViewById(R.id.tv_work_status);
             tvBatteryLevel = itemView.findViewById(R.id.tv_battery_level);
@@ -67,7 +67,7 @@ public class WorkersAdapter extends RecyclerView.Adapter<WorkersAdapter.ViewHold
             tvWorkFinished = itemView.findViewById(R.id.tv_work_finished);
             tvLocation = itemView.findViewById(R.id.tv_location);
 
-             */
+
         }
 
         public void setClientId(String endpointId, String endpointName) {

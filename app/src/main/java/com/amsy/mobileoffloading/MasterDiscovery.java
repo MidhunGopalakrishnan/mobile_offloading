@@ -290,6 +290,7 @@ public class MasterDiscovery extends AppCompatActivity {
         for (int i = 0; i < connectedDevices.size(); i++) {
             if (connectedDevices.get(i).getEndpointId().equals(endpointId)) {
                 connectedDevices.get(i).setDeviceStats(deviceStats);
+                Toast.makeText(getApplicationContext(), "Success: updated battery level: can proceed", Toast.LENGTH_SHORT).show();
                 connectedDevices.get(i).setRequestStatus(Constants.RequestStatus.ACCEPTED);
                 connectedDevicesAdapter.notifyItemChanged(i);
             }

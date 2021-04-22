@@ -52,10 +52,10 @@ public class MasterActivity extends AppCompatActivity {
 
 
     /* [row1 x cols1] * [row2 * cols2] */
-    private int rows1 = 150;
-    private int cols1 = 150;
-    private int rows2 = cols1;
-    private int cols2 = 150;
+    private int rows1 = Constants.matrixSize;
+    private int cols1 = Constants.matrixSize;
+    private int rows2 = Constants.matrixSize;
+    private int cols2 = Constants.matrixSize;
 
     private int[][] matrix1;
     private int[][] matrix2;
@@ -181,6 +181,7 @@ public class MasterActivity extends AppCompatActivity {
 
             ArrayList<ConnectedDevice> connectedDevices = (ArrayList<ConnectedDevice>) bundle.getSerializable(Constants.CONNECTED_DEVICES);
             addToWorkers(connectedDevices);
+            Log.d("CHECK" , "Added a connected Device as worker");
         } catch (NullPointerException e) {
             e.printStackTrace();
         }
@@ -368,7 +369,25 @@ public class MasterActivity extends AppCompatActivity {
             }
         }
     }
+    @Override
+    protected void onPause() {
+        super.onPause();
 
+        NearbyConnectionsManager.getInstance(getApplicationContext()).unregisterPayloadListener(payloadListener);
+        NearbyConnectionsManager.getInstance(getApplicationContext()).unregisterClientConnectionListener(clientConnectionListener);
+        stopWorkerStatusSubscribers();
 
+        handler.removeCallbacks(runnable);
+        LocationMonitor.getInstance(getApplicationContext()).stop();
+    }
+    private void stopWorkerStatusSubscribers() {
+        for (Worker worker : workers) {
+            WorkerStatusSubscriber workerStatusSubscriber = workerStatusSubscriberMap.get(worker.getEndpointId());
+            if (workerStatusSubscriber != null) {
+                workerStatusSubscriber.stop();
+                workerStatusSubscriberMap.remove(worker.getEndpointId());
+            }
+        }
+    }
 
 }

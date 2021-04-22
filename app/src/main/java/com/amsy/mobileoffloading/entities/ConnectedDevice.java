@@ -1,6 +1,8 @@
 package com.amsy.mobileoffloading.entities;
 
-public class ConnectedDevice {
+import java.io.Serializable;
+
+public class ConnectedDevice implements Serializable {
     private String endpointId;
     private String endpointName;
     private DeviceStatistics deviceStats;

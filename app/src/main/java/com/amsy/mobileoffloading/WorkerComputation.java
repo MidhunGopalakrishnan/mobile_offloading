@@ -13,6 +13,7 @@ import com.amsy.mobileoffloading.callback.PayloadListener;
 import com.amsy.mobileoffloading.entities.ClientPayLoad;
 import com.amsy.mobileoffloading.entities.TagDataPayload;
 import com.amsy.mobileoffloading.entities.WorkData;
+import com.amsy.mobileoffloading.entities.WorkInfo;
 import com.amsy.mobileoffloading.helper.Constants;
 import com.amsy.mobileoffloading.helper.DataTransfer;
 import com.amsy.mobileoffloading.helper.MatrixDS;
@@ -37,7 +38,7 @@ public class WorkerComputation extends AppCompatActivity {
     private DeviceStatisticsPublisher deviceStatsPublisher;
     private ClientConnectionListener connectionListener;
     private PayloadListener payloadCallback;
-    private int currentPartitionIndex;
+    private int currentPartitionIndex = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,7 +65,8 @@ public class WorkerComputation extends AppCompatActivity {
         TextView partitions = findViewById(R.id.partitions);
         partitions.setText("Vectors multiplied: " + count);
         TextView dispCount = findViewById(R.id.count);
-        dispCount.setText(count);
+        //TODO : ANVESH
+        dispCount.setText(count + "");
     }
     private void extractBundle() {
         Bundle bundle = getIntent().getExtras();
@@ -138,9 +140,9 @@ public class WorkerComputation extends AppCompatActivity {
 
 
     public void onDisconnect(View view) {
-        WorkStatus workStatus = new WorkStatus();
-        workStatus.setPartitionIndex(currentPartitionIndex);
-        workStatus.setStatus(Constants.WorkStatus.DISCONNECTED);
+        WorkInfo workStatus = new WorkInfo();
+        workStatus.setPartitionIndexInfo(currentPartitionIndex);
+        workStatus.setStatusInfo(Constants.WorkStatus.DISCONNECTED);
 
         ClientPayLoad tPayload1 = new ClientPayLoad();
         tPayload1.setTag(Constants.PayloadTags.WORK_STATUS);
@@ -151,7 +153,7 @@ public class WorkerComputation extends AppCompatActivity {
     }
 
     public void startWorking(Payload payload) {
-        WorkStatus workStatus = new WorkStatus();
+        WorkInfo workStatus = new WorkInfo();
         ClientPayLoad sendPayload = new ClientPayLoad();
         sendPayload.setTag(Constants.PayloadTags.WORK_STATUS);
 
@@ -166,17 +168,17 @@ public class WorkerComputation extends AppCompatActivity {
 
                     currentPartitionIndex += workData.getPartitionIndex();
                     setPartitionText(currentPartitionIndex);
-                    workStatus.setPartitionIndex(currentPartitionIndex);
-                    workStatus.setResult(dotProduct);
+                    workStatus.setPartitionIndexInfo(currentPartitionIndex);
+                    workStatus.setResultInfo(dotProduct);
 
-                    workStatus.setStatus(Constants.WorkStatus.WORKING);
+                    workStatus.setStatusInfo(Constants.WorkStatus.WORKING);
                     sendPayload.setData(workStatus);
                     DataTransfer.sendPayload(getApplicationContext(), masterId, sendPayload);
 
                 } else if (receivedPayload.getTag().equals(Constants.PayloadTags.FAREWELL)) {
                     setStatusText("Work Done !!", true);
 
-                    workStatus.setStatus(Constants.WorkStatus.FINISHED);
+                    workStatus.setStatusInfo(Constants.WorkStatus.FINISHED);
                     sendPayload.setData(workStatus);
                     DataTransfer.sendPayload(getApplicationContext(), masterId, sendPayload);
 

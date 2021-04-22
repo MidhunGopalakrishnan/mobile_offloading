@@ -297,7 +297,7 @@ public class WorkAllocator {
         public final static int BATTERY_LEVEL_DIFFERENCE = 20;
 
         /* If battery level is below this */
-        public final static int MINIMUM_BATTERY_LEVEL = 40;
+        public final static int MINIMUM_BATTERY_LEVEL = 5;
     }
 
 

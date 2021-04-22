@@ -9,6 +9,7 @@
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
     <application
         android:allowBackup="true"
@@ -17,7 +18,9 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.MobileOffloading">
-        <activity android:name=".MasterActivity"></activity>
+        <activity android:name=".MasterActivity"
+            android:screenOrientation="portrait"
+            ></activity>
         <activity android:name=".WorkerComputation" />
         <activity android:name=".WorkerAdvertisement" />
         <activity android:name=".MasterDiscovery" />
