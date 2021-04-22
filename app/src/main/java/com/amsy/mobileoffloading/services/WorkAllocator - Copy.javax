@@ -1,10 +1,14 @@
 package com.amsy.mobileoffloading.services;
 
+import android.app.usage.ConfigurationStats;
 import android.content.Context;
+import android.nfc.Tag;
 import android.os.Handler;
 import android.util.Log;
 import android.widget.Toast;
+
 import com.amsy.mobileoffloading.entities.ClientPayLoad;
+import com.amsy.mobileoffloading.entities.TagDataPayload;
 import com.amsy.mobileoffloading.entities.WorkData;
 import com.amsy.mobileoffloading.entities.WorkInfo;
 import com.amsy.mobileoffloading.entities.Worker;
@@ -12,7 +16,11 @@ import com.amsy.mobileoffloading.helper.Constants;
 import com.amsy.mobileoffloading.helper.FlushToFile;
 import com.amsy.mobileoffloading.helper.MatrixDS;
 import com.amsy.mobileoffloading.helper.PayloadConverter;
+import com.google.android.gms.common.api.Api;
 import com.google.android.gms.nearby.connection.Payload;
+
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Hashtable;
@@ -91,27 +99,11 @@ public class WorkAllocator {
         startWorkAllocation(); //startWorkScheduler
 
     }
-/*
+
     private void startWorkAllocation(){
         for(int i = 0; i < workerQueue.size();i++){
             allocateWork();
         }
-    }
-*/
-
-    private void startWorkAllocation() {
-        handler = new Handler();
-        runnable = () -> {
-            if (partitionResults.size() == totalpartitions) {
-                sendByeToWorkers();
-            } else {
-                addWorkToQueue();
-                allocateWork();
-                handler.postDelayed(runnable, 1000);
-            }
-        };
-
-        handler.postDelayed(runnable, 1000);
     }
 
     private void initiateWorkAssignment() {
@@ -125,7 +117,7 @@ public class WorkAllocator {
         if(workerQueue.size() > 0 && workQueue.size()>0 && partitionResults.size() != totalpartitions) {
             Worker worker = workerQueue.poll();
             int partitionIndex = workQueue.poll();
-
+            Log.d("Checking", "Currently running for PartitionIndex" + partitionIndex );
             while (!workers.contains(worker)) {
                 if (workerQueue.size() == 0) {
                     return;
@@ -140,7 +132,7 @@ public class WorkAllocator {
             }
             int row1 = partitionIndex / cols2;
             int col2 = partitionIndex % cols2;
-
+            Log.d("Checking", "Running for Row   = " + row1 + " Col "+ col2);
             int[] rows = matrix1[row1];
             int[] cols = matrix2Transpose[col2];
 
@@ -200,7 +192,7 @@ public class WorkAllocator {
     }
 
     public void checkWorkCompletion(int workAmount) {
-        Log.d("Checking", "totalpartitions :" + totalpartitions + "partitionResults.size() " + partitionResults.size());
+        Log.d("Checking",  "totalpartitions " + totalpartitions + " workAmount "  + workAmount + " partitionResults.size()" + partitionResults.size() );
         if (workAmount == totalpartitions) {
             sendByeToWorkers();
         } else if (partitionResults.size() == totalpartitions) {

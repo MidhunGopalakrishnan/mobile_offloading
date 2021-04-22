@@ -32,7 +32,7 @@ public class WorkerComputation extends AppCompatActivity {
     private DeviceStatisticsPublisher deviceStatsPublisher;
     private ClientConnectionListener connectionListener;
     private PayloadListener payloadCallback;
-    private int currentPartitionIndex = 1;
+    private int currentPartitionIndex;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
