@@ -53,7 +53,7 @@
             app:progressColor="#64b324"
             app:defTextSize="20sp"
             app:countTextSize="40sp"
-            app:percentage="30"/>
+            app:percentage="0"/>
         <TextView
             android:gravity="center"
             android:id="@+id/totalPartitions"

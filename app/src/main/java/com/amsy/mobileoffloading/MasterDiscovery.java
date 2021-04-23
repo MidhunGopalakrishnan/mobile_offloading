@@ -123,14 +123,14 @@ public class MasterDiscovery extends AppCompatActivity {
                 } else if (statusCode == ConnectionsStatusCodes.STATUS_CONNECTION_REJECTED) {
                     updateConnectedDeviceRequestStatus(endpointId, Constants.RequestStatus.REJECTED);
                 } else if (statusCode == ConnectionsStatusCodes.STATUS_ERROR) {
-                    removeConnectedDevice(endpointId);
+                    removeConnectedDevice(endpointId, true);
                 }
             }
 
             @Override
             public void onDisconnected(String endpointId) {
                 Log.d("MASTER", "clientConnectionListener -  onDisconnected ");
-                removeConnectedDevice(endpointId);
+                removeConnectedDevice(endpointId, true);
             }
         };
 
@@ -208,7 +208,7 @@ public class MasterDiscovery extends AppCompatActivity {
             public void onEndpointLost(@NonNull String endpointId) {
                 Log.d("MASTER", "ENDPOINT LOST");
                 Log.d("MASTER", endpointId);
-                removeConnectedDevice(endpointId);
+                removeConnectedDevice(endpointId, false);
             }
         };
 
@@ -229,12 +229,14 @@ public class MasterDiscovery extends AppCompatActivity {
         ;
     }
 
-    private void removeConnectedDevice(String endpointId) {
+    private void removeConnectedDevice(String endpointId, boolean forceRemove) {
+
         for (int i = 0; i < connectedDevices.size(); i++) {
-            if (connectedDevices.get(i).getEndpointId().equals(endpointId)) {
+            boolean checkStatus = forceRemove ? true :  !connectedDevices.get(i).getRequestStatus().equals(Constants.RequestStatus.ACCEPTED);
+            if (connectedDevices.get(i).getEndpointId().equals(endpointId) && checkStatus) {
                 connectedDevices.remove(i);
                 connectedDevicesAdapter.notifyItemChanged(i);
-                i--;
+                break;
             }
         }
     }
@@ -248,6 +250,7 @@ public class MasterDiscovery extends AppCompatActivity {
 //                Toast.makeText(getApplicationContext(), "Success: updated battery level: can proceed", Toast.LENGTH_SHORT).show();
                 connectedDevices.get(i).setRequestStatus(Constants.RequestStatus.ACCEPTED);
                 connectedDevicesAdapter.notifyItemChanged(i);
+                break;
             }
         }
     }
@@ -270,14 +273,19 @@ public class MasterDiscovery extends AppCompatActivity {
         masterDiscoveryService.stop();
     }
 
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        finish();
+    }
+
     private void startMasterActivity(ArrayList<ConnectedDevice> connectedDevices) {
         Intent intent = new Intent(getApplicationContext(), MasterActivity.class);
-
         Bundle bundle = new Bundle();
         bundle.putSerializable(Constants.CONNECTED_DEVICES, connectedDevices);
         intent.putExtras(bundle);
-
         startActivity(intent);
+        finish();
     }
 
 }

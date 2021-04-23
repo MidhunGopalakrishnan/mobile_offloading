@@ -46,7 +46,7 @@ public class LocationService {
     public void start() {
         LocationRequest locationRequest = LocationRequest.create();
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        locationRequest.setInterval(Constants.UPDATE_INTERVAL - 1000);
+        locationRequest.setInterval(Constants.UPDATE_INTERVAL);
         fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, context.getMainLooper());
     }
 

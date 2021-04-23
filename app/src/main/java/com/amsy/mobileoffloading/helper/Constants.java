@@ -8,7 +8,7 @@ public class Constants {
     public static final String CONNECTED_DEVICES = "CONNECTED_DEVICES";
     public static final String MASTER_ENDPOINT_ID = "MASTER_ENDPOINT_ID";
     public static final int UPDATE_INTERVAL = 5000;
-    public static final int UPDATE_INTERVAL_UI = 1000;
+    public static final int UPDATE_INTERVAL_UI = 2000;
 
     public static final class PayloadTags {
         public static final String DEVICE_STATS = "DEVICE_STATS";

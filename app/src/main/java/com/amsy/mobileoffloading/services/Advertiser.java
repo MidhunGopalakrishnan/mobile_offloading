@@ -27,8 +27,5 @@ public class Advertiser {
     public void stop() {
         Nearby.getConnectionsClient(context).stopAdvertising();
     }
-    public static void stopAdvertising(Context cxt) {
-        Nearby.getConnectionsClient(cxt).stopAdvertising();
 
-    }
 }

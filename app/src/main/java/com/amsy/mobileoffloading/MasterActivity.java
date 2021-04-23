@@ -103,6 +103,7 @@ public class MasterActivity extends AppCompatActivity {
             NearbyConnectionsManager.getInstance(getApplicationContext()).disconnectFromEndpoint(w.getEndpointId());
         }
         super.onBackPressed();
+        finish();
     }
 
     private void init() {
@@ -408,5 +409,6 @@ public class MasterActivity extends AppCompatActivity {
             }
         }
     }
+
 
 }

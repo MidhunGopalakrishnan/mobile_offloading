@@ -48,7 +48,7 @@ public class WorkerAdvertisement extends AppCompatActivity {
         initialiseDialog();
         //Start Advertisement
         advertiser = new Advertiser(this.getApplicationContext());
-        deviceStatsPublisher = new DeviceStatisticsPublisher(getApplicationContext(), null, Constants.UPDATE_INTERVAL);
+        deviceStatsPublisher = new DeviceStatisticsPublisher(getApplicationContext(), null, Constants.UPDATE_INTERVAL_UI);
         setDeviceId("Device ID: " + workerId);
         handler = new Handler(Looper.getMainLooper());
         runnable = () -> {
@@ -183,16 +183,18 @@ public class WorkerAdvertisement extends AppCompatActivity {
         bundle.putString(Constants.MASTER_ENDPOINT_ID, masterId);
         intent.putExtras(bundle);
         startActivity(intent);
+        advertiser.stop();
         finish();
     }
 
     @Override
     public void onBackPressed() {
-        super.onBackPressed();
-        Advertiser.stopAdvertising(this.getApplicationContext());
+        advertiser.stop();
         if(masterId != null) {
             NearbyConnectionsManager.getInstance(getApplicationContext()).disconnectFromEndpoint(masterId);
             NearbyConnectionsManager.getInstance(getApplicationContext()).rejectConnection(masterId);
         }
+        finish();
+        super.onBackPressed();
     }
 }
