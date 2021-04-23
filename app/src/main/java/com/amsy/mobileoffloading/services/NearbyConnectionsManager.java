@@ -111,26 +111,17 @@ public class NearbyConnectionsManager {
     }
 
     public void rejectConnection(String endpointId) {
-        Log.d("WORKER", "Connection Rejected");
         Nearby.getConnectionsClient(context).rejectConnection(endpointId);
     }
 
     public void disconnectFromEndpoint(String endpointId) {
-        Log.d("WORKER", "Connection Disconnected");
-        if (Nearby.getConnectionsClient(context) != null) {
-            Nearby.getConnectionsClient(context).disconnectFromEndpoint(endpointId);
-        }
+        Nearby.getConnectionsClient(context).disconnectFromEndpoint(endpointId);
     }
 
     public Task<Void> advertise(String clientId, AdvertisingOptions advertisingOptions) {
         return Nearby.getConnectionsClient(context)
                 .startAdvertising(clientId, context.getPackageName(), connectionLifecycleCallback, advertisingOptions)
-                .addOnSuccessListener((unused) -> {
-                    Log.d("WORKER", "Worker Advertising");
-                    Log.d("WORKER", unused + "");
-                })
                 .addOnFailureListener((Exception e) -> {
-                    Log.d("WORKER", "Failed Advertising");
                     e.printStackTrace();
                 });
     }
