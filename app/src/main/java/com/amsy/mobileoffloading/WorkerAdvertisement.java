@@ -195,5 +195,6 @@ public class WorkerAdvertisement extends AppCompatActivity {
     public void onBackPressed() {
         super.onBackPressed();
         Advertiser.stopAdvertising(this.getApplicationContext());
+        NearbyConnectionsManager.getInstance(getApplicationContext()).disconnectFromEndpoint(masterId);
     }
 }
