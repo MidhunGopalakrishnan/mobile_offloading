@@ -30,10 +30,13 @@ import com.amsy.mobileoffloading.services.LocationService;
 import com.amsy.mobileoffloading.services.NearbyConnectionsManager;
 import com.amsy.mobileoffloading.services.WorkAllocator;
 import com.amsy.mobileoffloading.services.WorkerStatusSubscriber;
+import com.app.progresviews.ProgressWheel;
 import com.google.android.gms.nearby.connection.ConnectionInfo;
 import com.google.android.gms.nearby.connection.ConnectionResolution;
 import com.google.android.gms.nearby.connection.Payload;
 import com.google.android.gms.nearby.connection.PayloadTransferUpdate;
+
+import org.w3c.dom.Text;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -69,7 +72,7 @@ public class MasterActivity extends AppCompatActivity {
     private ClientConnectionListener clientConnectionListener;
 
     private int workAmount;
-
+    private int totalPartitions;
     private Handler handler;
     private Runnable runnable;
 
@@ -79,9 +82,9 @@ public class MasterActivity extends AppCompatActivity {
         setContentView(R.layout.activity_master);
 
         locationService = new LocationService(getApplicationContext());
-        Log.d("MasterDiscovery" , "Starting computing matrix multiplication on only master");
+        Log.d("MasterDiscovery", "Starting computing matrix multiplication on only master");
         computeMatrixMultiplicationOnMaster();
-        Log.d("MasterDiscovery" , "Completed computing matrix multiplication on only master");
+        Log.d("MasterDiscovery", "Completed computing matrix multiplication on only master");
 
         unpackBundle();
         bindViews();
@@ -93,7 +96,7 @@ public class MasterActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        for(Worker w: workers) {
+        for (Worker w : workers) {
             updateWorkerConnectionStatus(w.getEndpointId(), Constants.WorkStatus.DISCONNECTED);
             workAllocator.removeWorker(w.getEndpointId());
             NearbyConnectionsManager.getInstance(getApplicationContext()).disconnectFromEndpoint(w.getEndpointId());
@@ -102,8 +105,8 @@ public class MasterActivity extends AppCompatActivity {
     }
 
     private void init() {
-        tvWorkTotal.setText("Total Amount of work = " + rows1 * cols2);
-
+        totalPartitions = rows1 * cols2;
+        updateProgress(0);
         matrix1 = MatrixDS.createMatrix(rows1, cols1);
         matrix2 = MatrixDS.createMatrix(rows2, cols2);
 
@@ -111,11 +114,17 @@ public class MasterActivity extends AppCompatActivity {
         workAllocator.beginDistributedComputation();
 
     }
+
+    private void updateProgress(int done) {
+        ProgressWheel wheel = findViewById(R.id.wheelprogress);
+        wheel.setPercentage(360 * (int) (done / totalPartitions));
+        wheel.setStepCountText(done + "/" + totalPartitions);
+        TextView totalPart = findViewById(R.id.totalPartitions);
+        totalPart.setText("Total Partitions: " + totalPartitions);
+    }
+
     private void bindViews() {
         rvWorkers = findViewById(R.id.rv_workers);
-
-        tvWorkFinished = findViewById(R.id.tv_work_finished);
-        tvWorkTotal = findViewById(R.id.tv_work_total);
     }
 
 
@@ -183,14 +192,13 @@ public class MasterActivity extends AppCompatActivity {
     }
 
 
-
     private void unpackBundle() {
         try {
             Bundle bundle = getIntent().getExtras();
 
             ArrayList<ConnectedDevice> connectedDevices = (ArrayList<ConnectedDevice>) bundle.getSerializable(Constants.CONNECTED_DEVICES);
             addToWorkers(connectedDevices);
-            Log.d("CHECK" , "Added a connected Device as worker");
+            Log.d("CHECK", "Added a connected Device as worker");
         } catch (NullPointerException e) {
             e.printStackTrace();
         }
@@ -212,7 +220,7 @@ public class MasterActivity extends AppCompatActivity {
         }
     }
 
-    private void computeMatrixMultiplicationOnMaster(){
+    private void computeMatrixMultiplicationOnMaster() {
         matrix1 = MatrixDS.createMatrix(rows1, cols1);
         matrix2 = MatrixDS.createMatrix(rows2, cols2);
 
@@ -353,8 +361,7 @@ public class MasterActivity extends AppCompatActivity {
                 break;
             }
         }
-
-        tvWorkFinished.setText("Amount of work finished = " + workAmount);
+        updateProgress(workAmount);
     }
 
     private void updateWorkerStatus(String endpointId, DeviceStatistics deviceStats) {
@@ -375,6 +382,7 @@ public class MasterActivity extends AppCompatActivity {
             }
         }
     }
+
     @Override
     protected void onPause() {
         super.onPause();
@@ -386,6 +394,7 @@ public class MasterActivity extends AppCompatActivity {
         handler.removeCallbacks(runnable);
         LocationMonitor.getInstance(getApplicationContext()).stop();
     }
+
     private void stopWorkerStatusSubscribers() {
         for (Worker worker : workers) {
             WorkerStatusSubscriber workerStatusSubscriber = workerStatusSubscriberMap.get(worker.getEndpointId());
