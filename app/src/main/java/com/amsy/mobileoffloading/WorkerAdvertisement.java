@@ -33,7 +33,7 @@ import pl.droidsonroids.gif.GifImageView;
 public class WorkerAdvertisement extends AppCompatActivity {
     private Advertiser advertiser;
     private String workerId;
-    private String masterId;
+    private String masterId = "";
     private ClientConnectionListener connectionListener;
     private Dialog confirmationDialog;
     private DeviceStatisticsPublisher deviceStatsPublisher;
@@ -62,23 +62,19 @@ public class WorkerAdvertisement extends AppCompatActivity {
         connectionListener = new ClientConnectionListener() {
             @Override
             public void onConnectionInitiated(String id, ConnectionInfo connectionInfo) {
-                Log.d("WORKER", "Connection Init");
-                Log.d("WORKER", id);
-                Log.d("WORKER", connectionInfo.getEndpointName() + " " + connectionInfo.getAuthenticationToken());
+                Log.d("WORKER", "Connection Received: " + id + " Endpoint name: " + connectionInfo.getEndpointName());
                 masterId = id;
                 showDialog(connectionInfo.getEndpointName());
             }
 
             @Override
             public void onConnectionResult(String id, ConnectionResolution connectionResolution) {
-                Log.d("WORKER", "Connection Accepted by master: " + id);
-                Log.d("WORKER", connectionResolution.getStatus().toString() + "");
+                Log.d("WORKER", "Connection Accepted By: " + id + " " + connectionResolution.getStatus().toString());
             }
 
             @Override
             public void onDisconnected(String id) {
-                Log.d("WORKER", "Disconnected");
-                Log.d("WORKER", id);
+                Log.d("WORKER", "Connection Disconnected: " + id);
                 finish();
             }
         };
@@ -87,7 +83,6 @@ public class WorkerAdvertisement extends AppCompatActivity {
     void setStatusText(String text, boolean available) {
         TextView st = findViewById(R.id.statusText);
         st.setText(text);
-        TextView sta = findViewById(R.id.statusText);
         ImageView online = findViewById(R.id.online);
         online.setVisibility(available ? View.VISIBLE : View.INVISIBLE);
         GifImageView loading = findViewById(R.id.loading);
@@ -151,16 +146,15 @@ public class WorkerAdvertisement extends AppCompatActivity {
         setStatusText("Initializing...", false);
         super.onResume();
         advertiser.start(workerId).addOnSuccessListener(command -> {
+            Log.d("WORKER", "Discoverable by all devices");
+            setStatusText("Discoverable by all devices", true);
+        }).addOnFailureListener(c -> {
+            if (((ApiException) c).getStatusCode() == 8001) {
+                Log.d("WORKER", "Discoverable by all devices");
                 setStatusText("Discoverable by all devices", true);
-        }).addOnFailureListener(command -> {
-            if(((ApiException) command).getStatusCode() == 8001) {
-                Log.d("WORKER", "Discoverable by all devices" );
-                setStatusText("Discoverable by all devices" , true);
-
             } else {
                 setStatusText("Failed to host device", false);
             }
-            command.printStackTrace();
         });
         NearbyConnectionsManager.getInstance(getApplicationContext()).registerClientConnectionListener(connectionListener);
         Log.d("WORKER", "Starting Device Stats");
@@ -184,13 +178,15 @@ public class WorkerAdvertisement extends AppCompatActivity {
         intent.putExtras(bundle);
         startActivity(intent);
         advertiser.stop();
+        Log.d("WORKER", "Device is not discoverable");
         finish();
     }
 
     @Override
     public void onBackPressed() {
         advertiser.stop();
-        if(masterId != null) {
+        Log.d("WORKER", "Device is not discoverable");
+        if (!masterId.equals("")) {
             NearbyConnectionsManager.getInstance(getApplicationContext()).disconnectFromEndpoint(masterId);
             NearbyConnectionsManager.getInstance(getApplicationContext()).rejectConnection(masterId);
         }

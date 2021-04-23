@@ -170,7 +170,7 @@ public class WorkerComputation extends AppCompatActivity {
                     WorkData workData = (WorkData) receivedPayload.getData();
                     int dotProduct = MatrixDS.getDotProduct(workData.getRows(), workData.getCols());
 
-                    Log.d("WORKER", "Partition Index: " + workData.getPartitionIndex() );
+                    Log.d("WORKER_COMPUTATION", "Partition Index: " + workData.getPartitionIndex() );
                     if (!finishedWork.contains(workData.getPartitionIndex())) {
                         currentPartitionIndex += 1;
                     }
@@ -185,7 +185,7 @@ public class WorkerComputation extends AppCompatActivity {
 
                 } else if (receivedPayload.getTag().equals(Constants.PayloadTags.FAREWELL)) {
                     onWorkFinished("Work Done !!");
-                    Log.d("WORKER", "Work Done" );
+                    Log.d("WORKER_COMPUTATION", "Work Done" );
                     workStatus.setStatusInfo(Constants.WorkStatus.FINISHED);
                     sendPayload.setData(workStatus);
                     DataTransfer.sendPayload(getApplicationContext(), masterId, sendPayload);
