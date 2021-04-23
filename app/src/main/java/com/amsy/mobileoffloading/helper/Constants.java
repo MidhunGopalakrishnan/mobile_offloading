@@ -3,7 +3,7 @@ package com.amsy.mobileoffloading.helper;
 public class Constants {
     public static final String MASTER_TAG = "MASTER";
     public static final String WORKER_TAG = "WORKER";
-    public static final int matrixSize = 3;
+    public static final int matrixSize = 100;
 
     public static final String CONNECTED_DEVICES = "CONNECTED_DEVICES";
     public static final String MASTER_ENDPOINT_ID = "MASTER_ENDPOINT_ID";
