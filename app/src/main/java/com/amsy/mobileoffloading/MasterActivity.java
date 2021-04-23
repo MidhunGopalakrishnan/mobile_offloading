@@ -12,42 +12,26 @@ import android.util.Log;
 import android.widget.TextView;
 
 import com.amsy.mobileoffloading.adapters.WorkersAdapter;
-import com.amsy.mobileoffloading.callback.ClientConnectionListener;
-import com.amsy.mobileoffloading.callback.FusedLocationListener;
-import com.amsy.mobileoffloading.callback.PayloadListener;
 import com.amsy.mobileoffloading.callback.WorkerStatusListener;
-import com.amsy.mobileoffloading.entities.ClientPayLoad;
 import com.amsy.mobileoffloading.entities.ConnectedDevice;
 import com.amsy.mobileoffloading.entities.DeviceStatistics;
 import com.amsy.mobileoffloading.entities.WorkInfo;
 import com.amsy.mobileoffloading.entities.Worker;
 import com.amsy.mobileoffloading.helper.Constants;
-import com.amsy.mobileoffloading.helper.Device;
 import com.amsy.mobileoffloading.helper.FlushToFile;
 import com.amsy.mobileoffloading.helper.MatrixDS;
-import com.amsy.mobileoffloading.helper.PayloadConverter;
-import com.amsy.mobileoffloading.services.LocationMonitor;
-import com.amsy.mobileoffloading.services.LocationService;
+import com.amsy.mobileoffloading.services.DeviceStatisticsPublisher;
 import com.amsy.mobileoffloading.services.NearbyConnectionsManager;
 import com.amsy.mobileoffloading.services.WorkAllocator;
 import com.amsy.mobileoffloading.services.WorkerStatusSubscriber;
 import com.app.progresviews.ProgressWheel;
-import com.google.android.gms.nearby.connection.ConnectionInfo;
-import com.google.android.gms.nearby.connection.ConnectionResolution;
-import com.google.android.gms.nearby.connection.Payload;
-import com.google.android.gms.nearby.connection.PayloadTransferUpdate;
 
-import org.w3c.dom.Text;
-
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
 public class MasterActivity extends AppCompatActivity {
 
     private RecyclerView rvWorkers;
-
-    private TextView tvWorkFinished, tvWorkTotal;
 
     private HashMap<String, WorkerStatusSubscriber> workerStatusSubscriberMap = new HashMap<>();
 
@@ -56,33 +40,27 @@ public class MasterActivity extends AppCompatActivity {
 
 
     /* [row1 x cols1] * [row2 * cols2] */
-    private int rows1 = Constants.matrixSize;
-    private int cols1 = Constants.matrixSize;
-    private int rows2 = Constants.matrixSize;
-    private int cols2 = Constants.matrixSize;
+    private int rows1 = Constants.matrix_rows;
+    private int cols1 = Constants.matrix_columns;
+    private int rows2 = Constants.matrix_columns;
+    private int cols2 = Constants.matrix_rows;
 
     private int[][] matrix1;
     private int[][] matrix2;
 
     private WorkAllocator workAllocator;
 
-    private LocationService locationService;
-    private Location lastAvailableLocation;
-
-    private PayloadListener payloadListener;
-    private ClientConnectionListener clientConnectionListener;
-
     private int workAmount;
     private int totalPartitions;
     private Handler handler;
     private Runnable runnable;
+    private DeviceStatisticsPublisher deviceStatsPublisher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_master);
 
-        locationService = new LocationService(getApplicationContext());
         Log.d("MasterDiscovery", "Starting computing matrix multiplication on only master");
         computeMatrixMultiplicationOnMaster();
         Log.d("MasterDiscovery", "Completed computing matrix multiplication on only master");
@@ -93,6 +71,22 @@ public class MasterActivity extends AppCompatActivity {
         init();
         setupDeviceBatteryStatsCollector();
 
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        stopWorkerStatusSubscribers();
+        deviceStatsPublisher.stop();
+        handler.removeCallbacks(runnable);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        startWorkerStatusSubscribers();
+        deviceStatsPublisher.start();
+        handler.postDelayed(runnable, Constants.UPDATE_INTERVAL_UI);
     }
 
     @Override
@@ -141,59 +135,6 @@ public class MasterActivity extends AppCompatActivity {
 
         rvWorkers.setAdapter(workersAdapter);
         workersAdapter.notifyDataSetChanged();
-    }
-
-    private void setEventListeners() {
-        locationService.requestLocationUpdates(new FusedLocationListener() {
-            @Override
-            public void onLocationAvailable(Location location) {
-                lastAvailableLocation = location;
-            }
-        });
-
-        clientConnectionListener = new ClientConnectionListener() {
-            @Override
-            public void onConnectionInitiated(String endpointId, ConnectionInfo connectionInfo) {
-
-            }
-
-            @Override
-            public void onConnectionResult(String endpointId, ConnectionResolution connectionResolution) {
-
-            }
-
-            @Override
-            public void onDisconnected(String endpointId) {
-                updateWorkerConnectionStatus(endpointId, Constants.WorkStatus.DISCONNECTED);
-                workAllocator.removeWorker(endpointId);
-                NearbyConnectionsManager.getInstance(getApplicationContext()).rejectConnection(endpointId);
-            }
-        };
-//
-        payloadListener = new PayloadListener() {
-            @Override
-            public void onPayloadReceived(String endpointId, Payload payload) {
-                try {
-                    ClientPayLoad tPayload = PayloadConverter.fromPayload(payload);
-                    if (tPayload.getTag().equals(Constants.PayloadTags.DISCONNECTED)) {
-                        Log.d("OFLOD", "DISCONN");
-
-                        updateWorkerConnectionStatus(endpointId, Constants.WorkStatus.DISCONNECTED);
-                        workAllocator.removeWorker(endpointId);
-                        NearbyConnectionsManager.getInstance(getApplicationContext()).rejectConnection(endpointId);
-                    }
-
-                } catch (IOException | ClassNotFoundException e) {
-                    e.printStackTrace();
-                }
-            }
-
-            @Override
-            public void onPayloadTransferUpdate(String endpointId, PayloadTransferUpdate payloadTransferUpdate) {
-                //TODO : here or up there : this is little dicey. can be fixed
-            }
-        };
-
     }
 
 
@@ -249,36 +190,17 @@ public class MasterActivity extends AppCompatActivity {
     }
 
     private void setupDeviceBatteryStatsCollector() {
+        deviceStatsPublisher = new DeviceStatisticsPublisher(getApplicationContext(), null, Constants.UPDATE_INTERVAL_UI);
         handler = new Handler();
         runnable = () -> {
-            DeviceStatistics deviceStats = Device.getStats(getApplicationContext());
-            Location location = LocationService.getInstance(getApplicationContext()).getLastAvailableLocation();
-
-            if (location != null) {
-                deviceStats.setLatitude(location.getLatitude());
-                deviceStats.setLongitude(location.getLongitude());
-                deviceStats.setLocationValid(true);
-            }
-
-            String deviceStatsStr = deviceStats.getBatteryLevel() + "%"
-                    + "\t" + (deviceStats.isCharging() ? "CHARGING" : "NOT CHARGING");
+            String deviceStatsStr = DeviceStatisticsPublisher.getBatteryLevel(this) + "%"
+                    + "\t" + (DeviceStatisticsPublisher.isPluggedIn(this) ? "CHARGING" : "NOT CHARGING");
             FlushToFile.writeTextToFile(getApplicationContext(), "master_battery.txt", true, deviceStatsStr);
 
-            handler.postDelayed(runnable, 5 * 1000);
+            handler.postDelayed(runnable, Constants.UPDATE_INTERVAL_UI);
         };
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-
-        NearbyConnectionsManager.getInstance(getApplicationContext()).registerPayloadListener(payloadListener);
-        NearbyConnectionsManager.getInstance(getApplicationContext()).registerClientConnectionListener(clientConnectionListener);
-        startWorkerStatusSubscribers();
-
-        handler.postDelayed(runnable, 5 * 1000);
-        LocationService.getInstance(getApplicationContext()).start();
-    }
 
     private void updateWorkerConnectionStatus(String endpointId, String status) {
         Log.d("DISCONNECTED----", endpointId);
@@ -328,7 +250,7 @@ public class MasterActivity extends AppCompatActivity {
                             + "\t" + deviceStats.getLongitude();
                     FlushToFile.writeTextToFile(getApplicationContext(), endpointId + ".txt", true, deviceStatsStr);
 
-                    Log.d("OFLOD", "WORK AMOUNT: " + getWorkAmount());
+                    Log.d("MASTER_ACTIVITY", "WORK AMOUNT: " + getWorkAmount());
                     workAllocator.checkWorkCompletion(getWorkAmount());
                 }
             });
@@ -375,29 +297,19 @@ public class MasterActivity extends AppCompatActivity {
 
             if (worker.getEndpointId().equals(endpointId)) {
                 worker.setDeviceStats(deviceStats);
-
-                if (deviceStats.isLocationValid() && lastAvailableLocation != null) {
+                Location masterLocation = DeviceStatisticsPublisher.getLocation(this);
+                if (deviceStats.isLocationValid() && masterLocation != null) {
                     float[] results = new float[1];
-                    Location.distanceBetween(lastAvailableLocation.getLatitude(), lastAvailableLocation.getLongitude(), deviceStats.getLatitude(), deviceStats.getLongitude(), results);
-
+                    Location.distanceBetween(masterLocation.getLatitude(), masterLocation.getLongitude(),
+                            deviceStats.getLatitude(), deviceStats.getLongitude(), results);
+                    Log.d("MASTER_ACTIVITY", "Master Location: " + masterLocation.getLatitude() + ", "+ masterLocation.getLongitude());
+                    Log.d("MASTER_ACTIVITY", "Master Distance: " + results[0]);
                     worker.setDistanceFromMaster(results[0]);
                 }
 
                 workersAdapter.notifyItemChanged(i);
             }
         }
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-
-        NearbyConnectionsManager.getInstance(getApplicationContext()).unregisterPayloadListener(payloadListener);
-        NearbyConnectionsManager.getInstance(getApplicationContext()).unregisterClientConnectionListener(clientConnectionListener);
-        stopWorkerStatusSubscribers();
-
-        handler.removeCallbacks(runnable);
-        LocationMonitor.getInstance(getApplicationContext()).stop();
     }
 
     private void stopWorkerStatusSubscribers() {

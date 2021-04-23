@@ -45,10 +45,8 @@ import java.util.List;
 public class MasterDiscovery extends AppCompatActivity {
 
     private RecyclerView rvConnectedDevices;
-    private Button assignWork;
     private ConnectedDevicesAdapter connectedDevicesAdapter;
     private List<ConnectedDevice> connectedDevices = new ArrayList<>();
-
     private MasterDiscoveryService masterDiscoveryService;
     private ClientConnectionListener clientConnectionListener;
     private PayloadListener payloadListener;

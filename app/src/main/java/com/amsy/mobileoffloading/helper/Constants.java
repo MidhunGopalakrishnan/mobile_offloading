@@ -1,13 +1,11 @@
 package com.amsy.mobileoffloading.helper;
 
 public class Constants {
-    public static final String MASTER_TAG = "MASTER";
-    public static final String WORKER_TAG = "WORKER";
-    public static final int matrixSize = 20;
+    public static final int matrix_rows = 30;
+    public static final int matrix_columns = 1000;
 
     public static final String CONNECTED_DEVICES = "CONNECTED_DEVICES";
     public static final String MASTER_ENDPOINT_ID = "MASTER_ENDPOINT_ID";
-    public static final int UPDATE_INTERVAL = 5000;
     public static final int UPDATE_INTERVAL_UI = 2000;
 
     public static final class PayloadTags {
