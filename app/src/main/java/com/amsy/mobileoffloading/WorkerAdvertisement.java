@@ -192,6 +192,7 @@ public class WorkerAdvertisement extends AppCompatActivity {
         Advertiser.stopAdvertising(this.getApplicationContext());
         if(masterId != null) {
             NearbyConnectionsManager.getInstance(getApplicationContext()).disconnectFromEndpoint(masterId);
+            NearbyConnectionsManager.getInstance(getApplicationContext()).rejectConnection(masterId);
         }
     }
 }
