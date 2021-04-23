@@ -86,7 +86,7 @@ public class MasterDiscovery extends AppCompatActivity {
         payloadListener = new PayloadListener() {
             @Override
             public void onPayloadReceived(String endpointId, Payload payload) {
-
+                Log.d("MASTER_DISCOVERY", "PayloadListener -  onPayloadReceived");
                 try {
                     ClientPayLoad tPayload = PayloadConverter.fromPayload(payload);
                     if (tPayload.getTag().equals(Constants.PayloadTags.DEVICE_STATS)) {
@@ -99,7 +99,7 @@ public class MasterDiscovery extends AppCompatActivity {
 
             @Override
             public void onPayloadTransferUpdate(String endpointId, PayloadTransferUpdate payloadTransferUpdate) {
-
+                Log.d("MASTER_DISCOVERY", "PayloadListener -  onPayloadTransferUpdate");
             }
         };
 
@@ -107,29 +107,31 @@ public class MasterDiscovery extends AppCompatActivity {
         clientConnectionListener = new ClientConnectionListener() {
             @Override
             public void onConnectionInitiated(String endpointId, ConnectionInfo connectionInfo) {
-                Log.d("MASTER", "clientConnectionListener -  onConnectionInitiated");
+                Log.d("MASTER_DISCOVERY", "clientConnectionListener -  onConnectionInitiated");
                 NearbyConnectionsManager.getInstance(getApplicationContext()).acceptConnection(endpointId);
             }
 
             @Override
             public void onConnectionResult(String endpointId, ConnectionResolution connectionResolution) {
 
-                Log.d("MASTER", "clientConnectionListener -  onConnectionResult");
+                Log.d("MASTER_DISCOVERY", "clientConnectionListener -  onConnectionResult" + endpointId);
 
                 int statusCode = connectionResolution.getStatus().getStatusCode();
                 if (statusCode == ConnectionsStatusCodes.STATUS_OK) {
-                    Log.d("MASTER", "clientConnectionListener -  onConnectionResult - STATUS_OK");
+                    Log.d("MASTER_DISCOVERY", "clientConnectionListener -  onConnectionResult - ACCEPTED");
                     updateConnectedDeviceRequestStatus(endpointId, Constants.RequestStatus.ACCEPTED);
                 } else if (statusCode == ConnectionsStatusCodes.STATUS_CONNECTION_REJECTED) {
+                    Log.d("MASTER_DISCOVERY", "clientConnectionListener -  onConnectionResult - REJECTED");
                     updateConnectedDeviceRequestStatus(endpointId, Constants.RequestStatus.REJECTED);
                 } else if (statusCode == ConnectionsStatusCodes.STATUS_ERROR) {
+                    Log.d("MASTER_DISCOVERY", "clientConnectionListener -  onConnectionResult - ERROR");
                     removeConnectedDevice(endpointId, true);
                 }
             }
 
             @Override
             public void onDisconnected(String endpointId) {
-                Log.d("MASTER", "clientConnectionListener -  onDisconnected ");
+                Log.d("MASTER_DISCOVERY", "clientConnectionListener -  onDisconnected " + endpointId);
                 removeConnectedDevice(endpointId, true);
             }
         };
@@ -163,7 +165,7 @@ public class MasterDiscovery extends AppCompatActivity {
                     Connector.sendToDevice(getApplicationContext(), connectedDevices.get(i).getEndpointId(), tPayload);
                 }
             } else {
-                Log.d("OFLOD", "LOOPING");
+                Log.d("MASTER_DISCOVERY", "LOOPING");
                 ClientPayLoad tPayload = new ClientPayLoad();
                 tPayload.setTag(Constants.PayloadTags.DISCONNECTED);
 
@@ -178,18 +180,21 @@ public class MasterDiscovery extends AppCompatActivity {
         for (int i = 0; i < connectedDevices.size(); i++) {
             if (connectedDevices.get(i).getEndpointId().equals(endpointId)) {
                 connectedDevices.get(i).setRequestStatus(status);
+                Log.d("MASTER_DISCOVERY", "Status of end point set to "+status);
                 connectedDevicesAdapter.notifyItemChanged(i);
+                break;
             }
         }
     }
 
     private void startMasterDiscovery() {
+                Log.d("MASTER_DISCOVERY", "Starting Master Discovery");
         EndpointDiscoveryCallback endpointDiscoveryCallback = new EndpointDiscoveryCallback() {
             @Override
             public void onEndpointFound(@NonNull String endpointId, @NonNull DiscoveredEndpointInfo discoveredEndpointInfo) {
-                Log.d("MASTER", "ENDPOINT FOUND");
-                Log.d("MASTER", endpointId);
-                Log.d("MASTER", discoveredEndpointInfo.getServiceId() + " " + discoveredEndpointInfo.getEndpointName());
+                Log.d("MASTER_DISCOVERY", "ENDPOINT FOUND " +endpointId);
+                Log.d("MASTER_DISCOVERY", endpointId);
+                Log.d("MASTER_DISCOVERY", discoveredEndpointInfo.getServiceId() + " " + discoveredEndpointInfo.getEndpointName());
 
                 ConnectedDevice connectedDevice = new ConnectedDevice();
                 connectedDevice.setEndpointId(endpointId);
@@ -200,14 +205,17 @@ public class MasterDiscovery extends AppCompatActivity {
                 connectedDevices.add(connectedDevice);
                 connectedDevicesAdapter.notifyItemChanged(connectedDevices.size() - 1);
 
+                Log.d("MASTER_DISCOVERY", "Added end point to connected devices : " +endpointId);
+
                 NearbyConnectionsManager.getInstance(getApplicationContext()).requestConnection(endpointId, "MASTER");
+                Log.d("MASTER_DISCOVERY", "Requested connection for : " +endpointId);
 
             }
 
             @Override
             public void onEndpointLost(@NonNull String endpointId) {
-                Log.d("MASTER", "ENDPOINT LOST");
-                Log.d("MASTER", endpointId);
+                Log.d("MASTER_DISCOVERY", "ENDPOINT LOST");
+                Log.d("MASTER_DISCOVERY", endpointId);
                 removeConnectedDevice(endpointId, false);
             }
         };
@@ -234,6 +242,7 @@ public class MasterDiscovery extends AppCompatActivity {
         for (int i = 0; i < connectedDevices.size(); i++) {
             boolean checkStatus = forceRemove ? true :  !connectedDevices.get(i).getRequestStatus().equals(Constants.RequestStatus.ACCEPTED);
             if (connectedDevices.get(i).getEndpointId().equals(endpointId) && checkStatus) {
+                Log.d("MASTER_DISCOVERY", "Removed end point from connected devices " + endpointId );
                 connectedDevices.remove(i);
                 connectedDevicesAdapter.notifyItemChanged(i);
                 break;
