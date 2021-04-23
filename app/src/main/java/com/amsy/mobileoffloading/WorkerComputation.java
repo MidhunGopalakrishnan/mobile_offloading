@@ -141,6 +141,7 @@ public class WorkerComputation extends AppCompatActivity {
         super.finish();
         Advertiser.stopAdvertising(this.getApplicationContext());
         NearbyConnectionsManager.getInstance(getApplicationContext()).disconnectFromEndpoint(masterId);
+        currentPartitionIndex = 0;
     }
 
 

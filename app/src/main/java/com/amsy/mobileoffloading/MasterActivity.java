@@ -3,6 +3,7 @@ package com.amsy.mobileoffloading;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.SimpleItemAnimator;
 
 import android.location.Location;
 import android.os.Bundle;
@@ -117,14 +118,17 @@ public class MasterActivity extends AppCompatActivity {
 
     private void updateProgress(int done) {
         ProgressWheel wheel = findViewById(R.id.wheelprogress);
-        wheel.setPercentage(360 * (int) (done / totalPartitions));
-        wheel.setStepCountText(done + "/" + totalPartitions);
+        int per = (int) (360 * done / totalPartitions);
+        wheel.setPercentage(per);
+        wheel.setStepCountText(done + "");
         TextView totalPart = findViewById(R.id.totalPartitions);
         totalPart.setText("Total Partitions: " + totalPartitions);
     }
 
     private void bindViews() {
         rvWorkers = findViewById(R.id.rv_workers);
+        SimpleItemAnimator itemAnimator = (SimpleItemAnimator) rvWorkers.getItemAnimator();
+        itemAnimator.setSupportsChangeAnimations(false);
     }
 
 
