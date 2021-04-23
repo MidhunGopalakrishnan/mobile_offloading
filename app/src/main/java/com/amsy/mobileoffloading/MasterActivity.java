@@ -89,7 +89,6 @@ public class MasterActivity extends AppCompatActivity {
         init();
         setupDeviceBatteryStatsCollector();
 
-
     }
 
     @Override
