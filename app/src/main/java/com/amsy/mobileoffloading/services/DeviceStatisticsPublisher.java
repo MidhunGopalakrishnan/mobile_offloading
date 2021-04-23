@@ -21,25 +21,20 @@ public class DeviceStatisticsPublisher {
     private String endpointId;
     private Handler handler;
     private Runnable runnable;
+    private int interval;
 
-
-    public DeviceStatisticsPublisher(Context context, String endpointId) {
+    public DeviceStatisticsPublisher(Context context, String endpointId, int updateInterval) {
         this.context = context;
         this.endpointId = endpointId;
+        this.interval = updateInterval;
         handler = new Handler(Looper.getMainLooper());
         runnable = () -> {
             publish();
-            handler.postDelayed(runnable, Constants.UPDATE_INTERVAL);
+            handler.postDelayed(runnable, interval);
         };
     }
 
-
     public void start() {
-        handler.postDelayed(runnable,  Constants.UPDATE_INTERVAL);
-        LocationService.getInstance(context).start();
-    }
-
-    public void start(int interval) {
         handler.postDelayed(runnable,  interval);
         LocationService.getInstance(context).start();
     }

@@ -54,8 +54,6 @@ public class WorkerComputation extends AppCompatActivity {
         waiting.setVisibility(isWorking ? View.INVISIBLE: View.VISIBLE);
         GifImageView working = findViewById(R.id.working);
         working.setVisibility(isWorking ? View.VISIBLE: View.INVISIBLE);
-        GifImageView done = findViewById(R.id.done);
-        working.setVisibility(isWorking ? View.INVISIBLE: View.VISIBLE);
     }
     public void onWorkFinished(String text) {
         //UI Textview
@@ -66,7 +64,7 @@ public class WorkerComputation extends AppCompatActivity {
         GifImageView working = findViewById(R.id.working);
         working.setVisibility(View.INVISIBLE);
         GifImageView done = findViewById(R.id.done);
-        working.setVisibility(View.VISIBLE);
+        done.setVisibility(View.VISIBLE);
     }
 
 
@@ -81,7 +79,7 @@ public class WorkerComputation extends AppCompatActivity {
     }
 
     private void startDeviceStatsPublisher() {
-        deviceStatsPublisher = new DeviceStatisticsPublisher(getApplicationContext(), masterId);
+        deviceStatsPublisher = new DeviceStatisticsPublisher(getApplicationContext(), masterId, Constants.UPDATE_INTERVAL_UI);
     }
 
     private void connectToMaster() {
