@@ -25,6 +25,7 @@ import com.amsy.mobileoffloading.services.NearbyConnectionsManager;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.nearby.connection.ConnectionInfo;
 import com.google.android.gms.nearby.connection.ConnectionResolution;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 
 import eo.view.batterymeter.BatteryMeterView;
 import pl.droidsonroids.gif.GifImageView;
@@ -100,7 +101,7 @@ public class WorkerAdvertisement extends AppCompatActivity {
 
     void setDeviceId(String text) {
         TextView st = findViewById(R.id.deviceId);
-        st.setText(text);
+        st.setText(text.toUpperCase());
     }
 
     void refreshCardData() {
@@ -126,12 +127,11 @@ public class WorkerAdvertisement extends AppCompatActivity {
 
 
     void initialiseDialog() {
-        confirmationDialog = new Dialog(this);
+        confirmationDialog = new BottomSheetDialog(this);
         confirmationDialog.setContentView(R.layout.confirmation_dialog);
         confirmationDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         confirmationDialog.findViewById(R.id.accept).setOnClickListener(v -> acceptConnection());
         confirmationDialog.findViewById(R.id.reject).setOnClickListener(v -> rejectConnection());
-        ;
     }
 
     void showDialog(String masterInfo) {

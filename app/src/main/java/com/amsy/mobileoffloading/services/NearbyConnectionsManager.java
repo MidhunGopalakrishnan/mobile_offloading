@@ -6,6 +6,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+
 import com.amsy.mobileoffloading.callback.ClientConnectionListener;
 import com.amsy.mobileoffloading.callback.PayloadListener;
 import com.google.android.gms.nearby.Nearby;
@@ -76,6 +77,7 @@ public class NearbyConnectionsManager {
 
         return nearbyConnectionsManager;
     }
+
     public void requestConnection(String endpointId, String clientId) {
         Nearby.getConnectionsClient(context)
                 .requestConnection(clientId, endpointId, connectionLifecycleCallback)
@@ -115,11 +117,13 @@ public class NearbyConnectionsManager {
 
     public void disconnectFromEndpoint(String endpointId) {
         Log.d("WORKER", "Connection Disconnected");
-        Nearby.getConnectionsClient(context).disconnectFromEndpoint(endpointId);
+        if (Nearby.getConnectionsClient(context) != null) {
+            Nearby.getConnectionsClient(context).disconnectFromEndpoint(endpointId);
+        }
     }
 
     public Task<Void> advertise(String clientId, AdvertisingOptions advertisingOptions) {
-       return Nearby.getConnectionsClient(context)
+        return Nearby.getConnectionsClient(context)
                 .startAdvertising(clientId, context.getPackageName(), connectionLifecycleCallback, advertisingOptions)
                 .addOnSuccessListener((unused) -> {
                     Log.d("WORKER", "Worker Advertising");
@@ -130,6 +134,7 @@ public class NearbyConnectionsManager {
                     e.printStackTrace();
                 });
     }
+
     public boolean registerPayloadListener(PayloadListener payloadListener) {
         if (payloadListener != null) {
             return payloadListenersSet.add(payloadListener);

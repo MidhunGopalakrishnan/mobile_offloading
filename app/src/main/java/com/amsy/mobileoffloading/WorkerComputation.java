@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 
@@ -157,8 +158,8 @@ public class WorkerComputation extends AppCompatActivity {
                     WorkData workData = (WorkData) receivedPayload.getData();
                     int dotProduct = MatrixDS.getDotProduct(workData.getRows(), workData.getCols());
 
-
-                    currentPartitionIndex += workData.getPartitionIndex();
+                    Log.d("WORKER", "Partition Index: " + workData.getPartitionIndex() );
+                    currentPartitionIndex ++;
                     setPartitionText(currentPartitionIndex);
                     workStatus.setPartitionIndexInfo(workData.getPartitionIndex());
                     workStatus.setResultInfo(dotProduct);
@@ -169,7 +170,7 @@ public class WorkerComputation extends AppCompatActivity {
 
                 } else if (receivedPayload.getTag().equals(Constants.PayloadTags.FAREWELL)) {
                     setStatusText("Work Done !!", true);
-
+                    Log.d("WORKER", "Work Done" );
                     workStatus.setStatusInfo(Constants.WorkStatus.FINISHED);
                     sendPayload.setData(workStatus);
                     DataTransfer.sendPayload(getApplicationContext(), masterId, sendPayload);

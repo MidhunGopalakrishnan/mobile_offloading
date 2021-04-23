@@ -30,7 +30,7 @@
                     android:layout_height="wrap_content"
                     android:text="Device ID: ABCD"
                     android:textColor="@color/white"
-                    android:textSize="20sp"  />
+                    android:textSize="18sp"  />
 
 
             </RelativeLayout>
