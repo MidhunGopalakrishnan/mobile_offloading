@@ -4,7 +4,6 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import androidx.recyclerview.widget.SimpleItemAnimator;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -77,8 +76,6 @@ public class MasterDiscovery extends AppCompatActivity {
         setContentView(R.layout.activity_master_discovery);
 
         rvConnectedDevices = findViewById(R.id.rv_connected_devices);
-        SimpleItemAnimator itemAnimator = (SimpleItemAnimator) rvConnectedDevices.getItemAnimator();
-        itemAnimator.setSupportsChangeAnimations(false);
         connectedDevicesAdapter = new ConnectedDevicesAdapter(this, connectedDevices);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getApplicationContext());
         rvConnectedDevices.setLayoutManager(linearLayoutManager);

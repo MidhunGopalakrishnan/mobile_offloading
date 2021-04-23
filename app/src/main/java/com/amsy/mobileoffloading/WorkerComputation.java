@@ -26,6 +26,8 @@ import com.google.android.gms.nearby.connection.ConnectionResolution;
 import com.google.android.gms.nearby.connection.Payload;
 import com.google.android.gms.nearby.connection.PayloadTransferUpdate;
 import java.io.IOException;
+import java.util.HashSet;
+
 import pl.droidsonroids.gif.GifImageView;
 
 public class WorkerComputation extends AppCompatActivity {
@@ -34,7 +36,7 @@ public class WorkerComputation extends AppCompatActivity {
     private ClientConnectionListener connectionListener;
     private PayloadListener payloadCallback;
     private int currentPartitionIndex;
-
+    private HashSet<Integer> finishedWork = new HashSet<>();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -172,7 +174,10 @@ public class WorkerComputation extends AppCompatActivity {
                     int dotProduct = MatrixDS.getDotProduct(workData.getRows(), workData.getCols());
 
                     Log.d("WORKER", "Partition Index: " + workData.getPartitionIndex() );
-                    currentPartitionIndex ++;
+                    if (!finishedWork.contains(workData.getPartitionIndex())) {
+                        currentPartitionIndex += 1;
+                    }
+                    finishedWork.add(workData.getPartitionIndex());
                     setPartitionText(currentPartitionIndex);
                     workStatus.setPartitionIndexInfo(workData.getPartitionIndex());
                     workStatus.setResultInfo(dotProduct);
