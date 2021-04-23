@@ -54,7 +54,21 @@ public class WorkerComputation extends AppCompatActivity {
         waiting.setVisibility(isWorking ? View.INVISIBLE: View.VISIBLE);
         GifImageView working = findViewById(R.id.working);
         working.setVisibility(isWorking ? View.VISIBLE: View.INVISIBLE);
+        GifImageView done = findViewById(R.id.done);
+        working.setVisibility(isWorking ? View.INVISIBLE: View.VISIBLE);
     }
+    public void onWorkFinished(String text) {
+        //UI Textview
+        TextView statusText = findViewById(R.id.statusText);
+        statusText.setText(text);
+        GifImageView waiting = findViewById(R.id.waiting);
+        waiting.setVisibility(View.INVISIBLE);
+        GifImageView working = findViewById(R.id.working);
+        working.setVisibility(View.INVISIBLE);
+        GifImageView done = findViewById(R.id.done);
+        working.setVisibility(View.VISIBLE);
+    }
+
 
     public void setPartitionText( int count) {
         TextView dispCount = findViewById(R.id.count);
@@ -169,7 +183,7 @@ public class WorkerComputation extends AppCompatActivity {
                     DataTransfer.sendPayload(getApplicationContext(), masterId, sendPayload);
 
                 } else if (receivedPayload.getTag().equals(Constants.PayloadTags.FAREWELL)) {
-                    setStatusText("Work Done !!", true);
+                    onWorkFinished("Work Done !!");
                     Log.d("WORKER", "Work Done" );
                     workStatus.setStatusInfo(Constants.WorkStatus.FINISHED);
                     sendPayload.setData(workStatus);

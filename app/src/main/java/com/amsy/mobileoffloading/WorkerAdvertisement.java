@@ -48,13 +48,8 @@ public class WorkerAdvertisement extends AppCompatActivity {
         initialiseDialog();
         //Start Advertisement
         advertiser = new Advertiser(this.getApplicationContext());
-
-
-
         deviceStatsPublisher = new DeviceStatisticsPublisher(getApplicationContext(), null);
         setDeviceId("Device ID: " + workerId);
-
-
         handler = new Handler(Looper.getMainLooper());
         runnable = () -> {
             refreshCardData();
@@ -169,7 +164,7 @@ public class WorkerAdvertisement extends AppCompatActivity {
         });
         NearbyConnectionsManager.getInstance(getApplicationContext()).registerClientConnectionListener(connectionListener);
         Log.d("WORKER", "Starting Device Stats");
-        deviceStatsPublisher.start();
+        deviceStatsPublisher.start(Constants.UPDATE_INTERVAL_UI);
         handler.postDelayed(runnable, Constants.UPDATE_INTERVAL_UI);
     }
 

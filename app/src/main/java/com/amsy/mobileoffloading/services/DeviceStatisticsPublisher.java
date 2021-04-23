@@ -39,6 +39,11 @@ public class DeviceStatisticsPublisher {
         LocationService.getInstance(context).start();
     }
 
+    public void start(int interval) {
+        handler.postDelayed(runnable,  interval);
+        LocationService.getInstance(context).start();
+    }
+
     public void stop() {
         handler.removeCallbacks(runnable);
         LocationService.getInstance(context).stop();

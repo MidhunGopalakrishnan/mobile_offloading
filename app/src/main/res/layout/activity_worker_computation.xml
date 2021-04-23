@@ -19,16 +19,24 @@
 
                 <pl.droidsonroids.gif.GifImageView
                     android:id="@+id/working"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="200dp"
                     android:src="@drawable/working"
                     android:visibility="invisible" />
 
                 <pl.droidsonroids.gif.GifImageView
+                    android:id="@+id/done"
+                    android:layout_width="match_parent"
+                    android:layout_height="200dp"
+                    android:visibility="invisible"
+                    android:src="@drawable/ic_online" />
+
+                <pl.droidsonroids.gif.GifImageView
                     android:id="@+id/waiting"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="200dp"
                     android:src="@drawable/waiting" />
+
             </RelativeLayout>
 
             <androidx.cardview.widget.CardView
