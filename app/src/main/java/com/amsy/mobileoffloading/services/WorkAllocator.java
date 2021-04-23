@@ -67,16 +67,16 @@ public class WorkAllocator {
         @Override
         public int compare(Worker worker1, Worker worker2) {
 
-            if (Math.abs(worker1.getDeviceStats().getBatteryLevel() - worker2.getDeviceStats().getBatteryLevel()) > ThresholdsHolder.BATTERY_LEVEL_DIFFERENCE) {
+            if ((worker1.getDeviceStats().getBatteryLevel() - worker2.getDeviceStats().getBatteryLevel()) > ThresholdsHolder.BATTERY_LEVEL_DIFFERENCE) {
                 return worker1.getDeviceStats().getBatteryLevel() - worker2.getDeviceStats().getBatteryLevel();
             }
 
-            if (worker1.getDeviceStats().isCharging() && worker1.getDeviceStats().isCharging()) {
+            if (worker1.getDeviceStats().isCharging() && worker2.getDeviceStats().isCharging()) {
                 return worker1.getDeviceStats().getBatteryLevel() - worker2.getDeviceStats().getBatteryLevel();
             } else if (worker1.getDeviceStats().isCharging()) {
-                return -1;
-            } else {
                 return 1;
+            } else {
+                return -1;
             }
         }
     }

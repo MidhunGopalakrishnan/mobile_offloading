@@ -92,6 +92,16 @@ public class MasterActivity extends AppCompatActivity {
 
     }
 
+    @Override
+    public void onBackPressed() {
+        for(Worker w: workers) {
+            updateWorkerConnectionStatus(w.getEndpointId(), Constants.WorkStatus.DISCONNECTED);
+            workAllocator.removeWorker(w.getEndpointId());
+            NearbyConnectionsManager.getInstance(getApplicationContext()).disconnectFromEndpoint(w.getEndpointId());
+        }
+        super.onBackPressed();
+    }
+
     private void init() {
         tvWorkTotal.setText("Total Amount of work = " + rows1 * cols2);
 
