@@ -97,6 +97,7 @@ public class MasterDiscovery extends AppCompatActivity {
                 }
             }
 
+
             @Override
             public void onPayloadTransferUpdate(String endpointId, PayloadTransferUpdate payloadTransferUpdate) {
                 Log.d("MASTER_DISCOVERY", "PayloadListener -  onPayloadTransferUpdate");
