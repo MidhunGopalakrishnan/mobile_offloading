@@ -43,4 +43,5 @@ dependencies {
     implementation 'eo.view:batterymeter:2.0.0'
     implementation 'com.zekapp.library:progreswheelview:1.1.5'
     implementation 'pl.droidsonroids.gif:android-gif-drawable:1.2.19'
+    compile 'com.zsoltsafrany:needle:1.0.0'
 }

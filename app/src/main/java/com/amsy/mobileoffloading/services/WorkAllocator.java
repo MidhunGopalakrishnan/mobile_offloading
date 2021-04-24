@@ -4,6 +4,8 @@ import android.content.Context;
 import android.os.Handler;
 import android.util.Log;
 import android.widget.Toast;
+
+import com.amsy.mobileoffloading.callback.ComputationListener;
 import com.amsy.mobileoffloading.entities.ClientPayLoad;
 import com.amsy.mobileoffloading.entities.WorkData;
 import com.amsy.mobileoffloading.entities.WorkInfo;
@@ -13,12 +15,15 @@ import com.amsy.mobileoffloading.helper.FlushToFile;
 import com.amsy.mobileoffloading.helper.MatrixDS;
 import com.amsy.mobileoffloading.helper.PayloadConverter;
 import com.google.android.gms.nearby.connection.Payload;
+
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Hashtable;
 import java.util.PriorityQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
+
+import needle.Needle;
 
 public class WorkAllocator {
     private Context context;
@@ -42,8 +47,9 @@ public class WorkAllocator {
     private Runnable runnable;
 
     private long beginTime;
+    private ComputationListener workCallback;
 
-    public WorkAllocator(Context context, ArrayList<Worker> workers, int[][]matrix1, int[][]matrix2) {
+    public WorkAllocator(Context context, ArrayList<Worker> workers, int[][] matrix1, int[][] matrix2, ComputationListener uiCallback) {
         this.context = context;
         this.workers.addAll(workers);
 
@@ -59,8 +65,8 @@ public class WorkAllocator {
         this.cols2 = matrix2[0].length;
 
         this.workerQueue = new PriorityQueue<Worker>(this.workers.size(), new WorkerPriorityChecker());
-        this.totalpartitions = this.rows1*this.cols2;
-
+        this.totalpartitions = this.rows1 * this.cols2;
+        this.workCallback = uiCallback;
     }
 
     private class WorkerPriorityChecker implements Comparator<Worker> {
@@ -81,7 +87,7 @@ public class WorkAllocator {
         }
     }
 
-    public void beginDistributedComputation(){
+    public void beginDistributedComputation() {
         beginTime = System.currentTimeMillis();
 
         sendWorkersToQueue(); //addWorkersToQueue
@@ -121,8 +127,8 @@ public class WorkAllocator {
     }
 
 
-    public void allocateWork(){
-        if(workerQueue.size() > 0 && workQueue.size()>0 && partitionResults.size() != totalpartitions) {
+    public void allocateWork() {
+        if (workerQueue.size() > 0 && workQueue.size() > 0 && partitionResults.size() != totalpartitions) {
             Worker worker = workerQueue.poll();
             int partitionIndex = workQueue.poll();
 
@@ -158,7 +164,7 @@ public class WorkAllocator {
                 Connector.sendToDevice(context, worker.getEndpointId(), payload1);
 
             } catch (Exception e) { //IOException e
-                if (!isAnyWrokerRunning(worker)){
+                if (!isAnyWrokerRunning(worker)) {
                     workerQueue.add(worker);
                 }
                 workQueue.add(partitionIndex);
@@ -170,21 +176,21 @@ public class WorkAllocator {
         }
     }
 
-    public void setNewWorkers(ArrayList<Worker> workers){
+    public void setNewWorkers(ArrayList<Worker> workers) {
         this.workers.clear();
         this.workers.addAll(workers);
     }
 
-    public void removeWorker(String endpointId){
-        for(int i = 0 ;i < workers.size(); i++){
-            if(workers.get(i).getEndpointId().equals(endpointId)){
+    public void removeWorker(String endpointId) {
+        for (int i = 0; i < workers.size(); i++) {
+            if (workers.get(i).getEndpointId().equals(endpointId)) {
                 workers.remove(i);
                 break;
             }
         }
     }
 
-    public boolean isItNewWork(int partitionIndex){
+    public boolean isItNewWork(int partitionIndex) {
         return !partitionResults.containsKey(partitionIndex);
     }
 
@@ -200,7 +206,7 @@ public class WorkAllocator {
     }
 
     public void checkWorkCompletion(int workAmount) {
-        Log.d("Checking", "totalpartitions :" + totalpartitions + "partitionResults.size() " + partitionResults.size());
+        Log.d("Checking", "totalpartitions :" + totalpartitions + " partitionResults.size() " + partitionResults.size());
         if (workAmount == totalpartitions) {
             sendByeToWorkers();
         } else if (partitionResults.size() == totalpartitions) {
@@ -209,30 +215,29 @@ public class WorkAllocator {
     }
 
 
-    public void updateWorkStatus(Worker worker, WorkInfo workInfo){
-        if(partitionResults.size() == totalpartitions){
+    public void updateWorkStatus(Worker worker, WorkInfo workInfo) {
+        if (partitionResults.size() == totalpartitions) {
             return; //finished all work :)
         }
-        if(worker == null || workInfo == null){
+        if (worker == null || workInfo == null) {
             return; // initialization is not done yet
         }
 
-        if(workInfo.getStatusInfo().equals(Constants.WorkStatus.WORKING)){
-            partitionResults.put(workInfo.getPartitionIndexInfo(),workInfo.getResultInfo());
+        if (workInfo.getStatusInfo().equals(Constants.WorkStatus.WORKING)) {
+            partitionResults.put(workInfo.getPartitionIndexInfo(), workInfo.getResultInfo());
         }
 
-        if(workInfo.getStatusInfo().equals(Constants.WorkStatus.FAILED) || workInfo.getStatusInfo().equals(Constants.WorkStatus.DISCONNECTED)){
+        if (workInfo.getStatusInfo().equals(Constants.WorkStatus.FAILED) || workInfo.getStatusInfo().equals(Constants.WorkStatus.DISCONNECTED)) {
             addWorkToQueue(workInfo.getPartitionIndexInfo());
         }
 
-        if(!workInfo.getStatusInfo().equals(Constants.WorkStatus.DISCONNECTED)){
+        if (!workInfo.getStatusInfo().equals(Constants.WorkStatus.DISCONNECTED)) {
             addWorkersToQueue(worker);
         }
 
-        if(partitionResults.size() != totalpartitions){
+        if (partitionResults.size() != totalpartitions) {
             allocateWork();
-        }
-        else{
+        } else {
             sendByeToWorkers();
         }
     }
@@ -245,8 +250,8 @@ public class WorkAllocator {
         bye = true;
         handler.removeCallbacks(runnable);
 
-        for(Worker worker : workers){
-            if(!worker.getWorkStatus().getStatusInfo().equals(Constants.WorkStatus.DISCONNECTED)){
+        for (Worker worker : workers) {
+            if (!worker.getWorkStatus().getStatusInfo().equals(Constants.WorkStatus.DISCONNECTED)) {
                 ClientPayLoad payload = new ClientPayLoad();
                 payload.setTag(Constants.PayloadTags.FAREWELL);
 
@@ -258,27 +263,28 @@ public class WorkAllocator {
 
         long endTime = System.currentTimeMillis();
         long totalTimeElapsed = endTime - beginTime;
-
-        FlushToFile.writeTextToFile(context, "exectution_time_of_distributed_approach.txt" , false ,totalTimeElapsed + " Milliseconds");
+        FlushToFile.writeTextToFile(context, "exectution_time_of_distributed_approach.txt", false, totalTimeElapsed + " ms");
         FlushToFile.writeMatrixToFile(context, "matrix1.txt", matrix1);
         FlushToFile.writeMatrixToFile(context, "matrix2.txt", matrix2);
 
+
         int[][] resultMatrix = new int[rows1][cols1];
-        for(int i = 0; i < rows1; i++){
-            for(int j = 0 ; j < cols2 ; j++){
+        for (int i = 0; i < rows1; i++) {
+            for (int j = 0; j < cols2; j++) {
                 resultMatrix[i][j] = partitionResults.get(i * cols2 + j);
             }
         }
 
-        FlushToFile.writeMatrixToFile(context,"result_matrix.txt" , resultMatrix);
+        FlushToFile.writeMatrixToFile(context, "result_matrix.txt", resultMatrix);
+        this.workCallback.onWorkCompleted(totalTimeElapsed);
     }
 
     private void addWorkersToQueue(Worker worker) {
         workerQueue.add(worker);
     }
 
-    private void sendWorkersToQueue(){
-        for ( Worker worker : workers){
+    private void sendWorkersToQueue() {
+        for (Worker worker : workers) {
             workerQueue.add(worker);
         }
     }
@@ -291,8 +297,8 @@ public class WorkAllocator {
         }
     }
 
-    private void addWorkToQueue(int partitionIndex){
-        if(!partitionResults.containsKey(partitionIndex)) {
+    private void addWorkToQueue(int partitionIndex) {
+        if (!partitionResults.containsKey(partitionIndex)) {
             workQueue.add(partitionIndex);
         }
     }

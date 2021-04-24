@@ -25,6 +25,7 @@ import com.google.android.gms.nearby.connection.ConnectionInfo;
 import com.google.android.gms.nearby.connection.ConnectionResolution;
 import com.google.android.gms.nearby.connection.Payload;
 import com.google.android.gms.nearby.connection.PayloadTransferUpdate;
+
 import java.io.IOException;
 import java.util.HashSet;
 
@@ -37,6 +38,7 @@ public class WorkerComputation extends AppCompatActivity {
     private PayloadListener payloadCallback;
     private int currentPartitionIndex;
     private HashSet<Integer> finishedWork = new HashSet<>();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -48,15 +50,17 @@ public class WorkerComputation extends AppCompatActivity {
 
 
     }
+
     public void setStatusText(String text, boolean isWorking) {
         //UI Textview
         TextView statusText = findViewById(R.id.statusText);
         statusText.setText(text);
         GifImageView waiting = findViewById(R.id.waiting);
-        waiting.setVisibility(isWorking ? View.INVISIBLE: View.VISIBLE);
+        waiting.setVisibility(isWorking ? View.INVISIBLE : View.VISIBLE);
         GifImageView working = findViewById(R.id.working);
-        working.setVisibility(isWorking ? View.VISIBLE: View.INVISIBLE);
+        working.setVisibility(isWorking ? View.VISIBLE : View.INVISIBLE);
     }
+
     public void onWorkFinished(String text) {
         //UI Textview
         TextView statusText = findViewById(R.id.statusText);
@@ -70,11 +74,12 @@ public class WorkerComputation extends AppCompatActivity {
     }
 
 
-    public void setPartitionText( int count) {
+    public void setPartitionText(int count) {
         TextView dispCount = findViewById(R.id.count);
         //TODO : ANVESH
         dispCount.setText(count + "");
     }
+
     private void extractBundle() {
         Bundle bundle = getIntent().getExtras();
         this.masterId = bundle.getString(Constants.MASTER_ENDPOINT_ID);
@@ -117,6 +122,7 @@ public class WorkerComputation extends AppCompatActivity {
     }
 
     private void navBack() {
+        finishedWork = new HashSet<>();
         finish();
     }
 
@@ -163,42 +169,42 @@ public class WorkerComputation extends AppCompatActivity {
         sendPayload.setTag(Constants.PayloadTags.WORK_STATUS);
 
         try {
-                ClientPayLoad receivedPayload = PayloadConverter.fromPayload(payload);
-                if (receivedPayload.getTag().equals(Constants.PayloadTags.WORK_DATA)) {
-                    setStatusText("Working now", true);
+            ClientPayLoad receivedPayload = PayloadConverter.fromPayload(payload);
+            if (receivedPayload.getTag().equals(Constants.PayloadTags.WORK_DATA)) {
+                setStatusText("Working now", true);
 
-                    WorkData workData = (WorkData) receivedPayload.getData();
-                    int dotProduct = MatrixDS.getDotProduct(workData.getRows(), workData.getCols());
+                WorkData workData = (WorkData) receivedPayload.getData();
+                int dotProduct = MatrixDS.getDotProduct(workData.getRows(), workData.getCols());
 
-                    Log.d("WORKER_COMPUTATION", "Partition Index: " + workData.getPartitionIndex() );
-                    if (!finishedWork.contains(workData.getPartitionIndex())) {
-                        currentPartitionIndex += 1;
-                    }
+                Log.d("WORKER_COMPUTATION", "Partition Index: " + workData.getPartitionIndex());
+                if (!finishedWork.contains(workData.getPartitionIndex())) {
                     finishedWork.add(workData.getPartitionIndex());
-                    setPartitionText(currentPartitionIndex);
-                    workStatus.setPartitionIndexInfo(workData.getPartitionIndex());
-                    workStatus.setResultInfo(dotProduct);
-
-                    workStatus.setStatusInfo(Constants.WorkStatus.WORKING);
-                    sendPayload.setData(workStatus);
-                    DataTransfer.sendPayload(getApplicationContext(), masterId, sendPayload);
-
-                } else if (receivedPayload.getTag().equals(Constants.PayloadTags.FAREWELL)) {
-                    onWorkFinished("Work Done !!");
-                    Log.d("WORKER_COMPUTATION", "Work Done" );
-                    workStatus.setStatusInfo(Constants.WorkStatus.FINISHED);
-                    sendPayload.setData(workStatus);
-                    DataTransfer.sendPayload(getApplicationContext(), masterId, sendPayload);
-
-                } else if (receivedPayload.getTag().equals(Constants.PayloadTags.DISCONNECTED)) {
-                    navBack();
                 }
+                currentPartitionIndex = workData.getPartitionIndex();
 
-            } catch (IOException | ClassNotFoundException e) {
-                e.printStackTrace();
+                setPartitionText(finishedWork.size());
+                workStatus.setPartitionIndexInfo(workData.getPartitionIndex());
+                workStatus.setResultInfo(dotProduct);
+
+                workStatus.setStatusInfo(Constants.WorkStatus.WORKING);
+                sendPayload.setData(workStatus);
+                DataTransfer.sendPayload(getApplicationContext(), masterId, sendPayload);
+
+            } else if (receivedPayload.getTag().equals(Constants.PayloadTags.FAREWELL)) {
+                onWorkFinished("Work Done !!");
+                Log.d("WORKER_COMPUTATION", "Work Done");
+                workStatus.setStatusInfo(Constants.WorkStatus.FINISHED);
+                sendPayload.setData(workStatus);
+                DataTransfer.sendPayload(getApplicationContext(), masterId, sendPayload);
+                deviceStatsPublisher.stop();
+            } else if (receivedPayload.getTag().equals(Constants.PayloadTags.DISCONNECTED)) {
+                navBack();
             }
-    }
 
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
 
 
 }

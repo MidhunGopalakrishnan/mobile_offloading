@@ -12,6 +12,7 @@ import android.util.Log;
 import android.widget.TextView;
 
 import com.amsy.mobileoffloading.adapters.WorkersAdapter;
+import com.amsy.mobileoffloading.callback.ComputationListener;
 import com.amsy.mobileoffloading.callback.WorkerStatusListener;
 import com.amsy.mobileoffloading.entities.ConnectedDevice;
 import com.amsy.mobileoffloading.entities.DeviceStatistics;
@@ -26,8 +27,12 @@ import com.amsy.mobileoffloading.services.WorkAllocator;
 import com.amsy.mobileoffloading.services.WorkerStatusSubscriber;
 import com.app.progresviews.ProgressWheel;
 
+import org.w3c.dom.Text;
+
 import java.util.ArrayList;
 import java.util.HashMap;
+
+import needle.Needle;
 
 public class MasterActivity extends AppCompatActivity {
 
@@ -106,18 +111,23 @@ public class MasterActivity extends AppCompatActivity {
         matrix1 = MatrixDS.createMatrix(rows1, cols1);
         matrix2 = MatrixDS.createMatrix(rows2, cols2);
 
-        workAllocator = new WorkAllocator(getApplicationContext(), workers, matrix1, matrix2);
+        workAllocator = new WorkAllocator(getApplicationContext(), workers, matrix1, matrix2, slaveTime -> {
+            TextView slave = findViewById(R.id.slaveTime);
+            slave.setText("Execution time (Slave): " + slaveTime + "ms");
+        });
         workAllocator.beginDistributedComputation();
-
     }
 
     private void updateProgress(int done) {
         ProgressWheel wheel = findViewById(R.id.wheelprogress);
-        int per = (int) (360 * done / totalPartitions);
+        int per = 360 * done / totalPartitions;
         wheel.setPercentage(per);
         wheel.setStepCountText(done + "");
         TextView totalPart = findViewById(R.id.totalPartitions);
         totalPart.setText("Total Partitions: " + totalPartitions);
+        if(per == 360) {
+            deviceStatsPublisher.stop();
+        }
     }
 
     private void bindViews() {
@@ -169,25 +179,26 @@ public class MasterActivity extends AppCompatActivity {
     private void computeMatrixMultiplicationOnMaster() {
         matrix1 = MatrixDS.createMatrix(rows1, cols1);
         matrix2 = MatrixDS.createMatrix(rows2, cols2);
-
-        long startTime = System.currentTimeMillis();
-
-        int[][] mul = new int[rows1][cols2];
-        for (int i = 0; i < rows1; i++) {
-            for (int j = 0; j < cols2; j++) {
-                mul[i][j] = 0;
-                for (int k = 0; k < cols1; k++) {
-                    mul[i][j] += matrix1[i][k] * matrix2[k][j];
+        Needle.onBackgroundThread().execute(() -> {
+            long startTime = System.currentTimeMillis();
+            int[][] mul = new int[rows1][cols2];
+            for (int i = 0; i < rows1; i++) {
+                for (int j = 0; j < cols2; j++) {
+                    mul[i][j] = 0;
+                    for (int k = 0; k < cols1; k++) {
+                        mul[i][j] += matrix1[i][k] * matrix2[k][j];
+                    }
                 }
             }
-        }
-
-        long endTime = System.currentTimeMillis();
-        long totalTime = endTime - startTime;
-
-        //Toast.makeText(this, "Execution on master alone: " + (totalTime), Toast.LENGTH_SHORT).show();
-        FlushToFile.writeTextToFile(getApplicationContext(), "exec_time_master_alone.txt", false, totalTime + "ms");
+            long endTime = System.currentTimeMillis();
+            long totalTime = endTime - startTime;
+            FlushToFile.writeTextToFile(getApplicationContext(), "exec_time_master_alone.txt", false, totalTime + "ms");
+            TextView master = findViewById(R.id.masterTime);
+            master.setText("Execution time (Master): " + totalTime + "ms");
+        });
     }
+
+
 
     private void setupDeviceBatteryStatsCollector() {
         deviceStatsPublisher = new DeviceStatisticsPublisher(getApplicationContext(), null, Constants.UPDATE_INTERVAL_UI);
@@ -196,7 +207,6 @@ public class MasterActivity extends AppCompatActivity {
             String deviceStatsStr = DeviceStatisticsPublisher.getBatteryLevel(this) + "%"
                     + "\t" + (DeviceStatisticsPublisher.isPluggedIn(this) ? "CHARGING" : "NOT CHARGING");
             FlushToFile.writeTextToFile(getApplicationContext(), "master_battery.txt", true, deviceStatsStr);
-
             handler.postDelayed(runnable, Constants.UPDATE_INTERVAL_UI);
         };
     }
@@ -227,16 +237,12 @@ public class MasterActivity extends AppCompatActivity {
                 public void onWorkStatusReceived(String endpointId, WorkInfo workStatus) {
 
                     if (workStatus.getStatusInfo().equals(Constants.WorkStatus.DISCONNECTED)) {
-
-                        //Log.d("OFLOD", "DISCONN");
-
                         updateWorkerConnectionStatus(endpointId, Constants.WorkStatus.DISCONNECTED);
                         workAllocator.removeWorker(endpointId);
                         NearbyConnectionsManager.getInstance(getApplicationContext()).rejectConnection(endpointId);
                     } else {
                         updateWorkerStatus(endpointId, workStatus);
                     }
-
                     workAllocator.checkWorkCompletion(getWorkAmount());
                 }
 
@@ -249,7 +255,6 @@ public class MasterActivity extends AppCompatActivity {
                             + "\t\t" + deviceStats.getLatitude()
                             + "\t" + deviceStats.getLongitude();
                     FlushToFile.writeTextToFile(getApplicationContext(), endpointId + ".txt", true, deviceStatsStr);
-
                     Log.d("MASTER_ACTIVITY", "WORK AMOUNT: " + getWorkAmount());
                     workAllocator.checkWorkCompletion(getWorkAmount());
                 }
@@ -302,7 +307,7 @@ public class MasterActivity extends AppCompatActivity {
                     float[] results = new float[1];
                     Location.distanceBetween(masterLocation.getLatitude(), masterLocation.getLongitude(),
                             deviceStats.getLatitude(), deviceStats.getLongitude(), results);
-                    Log.d("MASTER_ACTIVITY", "Master Location: " + masterLocation.getLatitude() + ", "+ masterLocation.getLongitude());
+                    Log.d("MASTER_ACTIVITY", "Master Location: " + masterLocation.getLatitude() + ", " + masterLocation.getLongitude());
                     Log.d("MASTER_ACTIVITY", "Master Distance: " + results[0]);
                     worker.setDistanceFromMaster(results[0]);
                 }
