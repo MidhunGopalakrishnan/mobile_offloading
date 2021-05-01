@@ -5,7 +5,9 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.SimpleItemAnimator;
 
+import android.content.Context;
 import android.location.Location;
+import android.os.BatteryManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
@@ -67,7 +69,17 @@ public class MasterActivity extends AppCompatActivity {
         setContentView(R.layout.activity_master);
 
         Log.d("MasterDiscovery", "Starting computing matrix multiplication on only master");
+        TextView masterPower = findViewById(R.id.masterPower);
+        masterPower.setText("Stats not available");
+        BatteryManager mBatteryManager =
+                (BatteryManager)getSystemService(Context.BATTERY_SERVICE);
+        Long initialEnergyMaster =
+                mBatteryManager.getLongProperty(BatteryManager.BATTERY_PROPERTY_ENERGY_COUNTER);
         computeMatrixMultiplicationOnMaster();
+        Long finalEnergyMaster =
+                mBatteryManager.getLongProperty(BatteryManager.BATTERY_PROPERTY_ENERGY_COUNTER);
+        Long energyConsumedMaster = Math.abs(initialEnergyMaster-finalEnergyMaster);
+        masterPower.setText("Power Consumption (Master): " +Long.toString(energyConsumedMaster)+ " nWh");
         Log.d("MasterDiscovery", "Completed computing matrix multiplication on only master");
 
         unpackBundle();

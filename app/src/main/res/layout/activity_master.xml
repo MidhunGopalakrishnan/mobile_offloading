@@ -45,15 +45,22 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:textStyle="bold"
-            android:textSize="20dp"
+            android:textSize="15dp"
             android:text="Execution time (Master):"/>
         <TextView
             android:id="@+id/slaveTime"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:textStyle="bold"
-            android:textSize="20dp"
+            android:textSize="15dp"
             android:text="Execution time (Slaves):"/>
+        <TextView
+            android:id="@+id/masterPower"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:textStyle="bold"
+            android:textSize="15dp"
+            android:text="Power Consumption (Master):"/>
         <com.app.progresviews.ProgressWheel
             android:id="@+id/wheelprogress"
             android:layout_width="match_parent"

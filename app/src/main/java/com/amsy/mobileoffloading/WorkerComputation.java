@@ -3,7 +3,9 @@ package com.amsy.mobileoffloading;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Context;
 import android.content.Intent;
+import android.os.BatteryManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -38,6 +40,8 @@ public class WorkerComputation extends AppCompatActivity {
     private PayloadListener payloadCallback;
     private int currentPartitionIndex;
     private HashSet<Integer> finishedWork = new HashSet<>();
+    BatteryManager mBatteryManager = null;
+    Long initialEnergyWorker,finalEnergyWorker,energyConsumedWorker;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,8 +51,11 @@ public class WorkerComputation extends AppCompatActivity {
         startDeviceStatsPublisher();
         setConnectionCallback();
         connectToMaster();
-
-
+        //start measuring the pwer consumption at Worker
+        mBatteryManager = (BatteryManager)getSystemService(Context.BATTERY_SERVICE);
+        initialEnergyWorker =
+                mBatteryManager.getLongProperty(BatteryManager.BATTERY_PROPERTY_ENERGY_COUNTER);
+        Log.d("WORKER_COMPUTATION", "Capturing power consumption");
     }
 
     public void setStatusText(String text, boolean isWorking) {
@@ -71,13 +78,15 @@ public class WorkerComputation extends AppCompatActivity {
         working.setVisibility(View.INVISIBLE);
         GifImageView done = findViewById(R.id.done);
         done.setVisibility(View.VISIBLE);
+        TextView powerConsumed = findViewById(R.id.powerValue);
+        powerConsumed.setText("Power Consumption (Slave) : "  + Long.toString(energyConsumedWorker)+ " nWh");
     }
 
 
     public void setPartitionText(int count) {
-        TextView dispCount = findViewById(R.id.count);
-        //TODO : ANVESH
-        dispCount.setText(count + "");
+//        TextView dispCount = findViewById(R.id.count);
+//        //TODO : ANVESH
+//        dispCount.setText(count + "");
     }
 
     private void extractBundle() {
@@ -191,12 +200,17 @@ public class WorkerComputation extends AppCompatActivity {
                 DataTransfer.sendPayload(getApplicationContext(), masterId, sendPayload);
 
             } else if (receivedPayload.getTag().equals(Constants.PayloadTags.FAREWELL)) {
+                // end measuring energy level
+                finalEnergyWorker =
+                        mBatteryManager.getLongProperty(BatteryManager.BATTERY_PROPERTY_ENERGY_COUNTER);
+                energyConsumedWorker = Math.abs(initialEnergyWorker-finalEnergyWorker);
                 onWorkFinished("Work Done !!");
                 Log.d("WORKER_COMPUTATION", "Work Done");
                 workStatus.setStatusInfo(Constants.WorkStatus.FINISHED);
                 sendPayload.setData(workStatus);
                 DataTransfer.sendPayload(getApplicationContext(), masterId, sendPayload);
                 deviceStatsPublisher.stop();
+
             } else if (receivedPayload.getTag().equals(Constants.PayloadTags.DISCONNECTED)) {
                 navBack();
             }
