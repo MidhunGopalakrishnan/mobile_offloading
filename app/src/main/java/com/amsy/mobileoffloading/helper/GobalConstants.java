@@ -1,6 +1,6 @@
 package com.amsy.mobileoffloading.helper;
 
-public class Constants {
+public class GobalConstants {
     public static final int matrix_rows = 20;
     public static final int matrix_columns = 20;
 

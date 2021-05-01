@@ -15,20 +15,20 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 
-import com.amsy.mobileoffloading.adapters.ConnectedDevicesAdapter;
-import com.amsy.mobileoffloading.callback.ClientConnectionListener;
+import com.amsy.mobileoffloading.adapters.DeviceConnectionAdapter;
+import com.amsy.mobileoffloading.callback.WorkerConnectionListener;
 import com.amsy.mobileoffloading.callback.PayloadListener;
-import com.amsy.mobileoffloading.entities.ClientPayLoad;
-import com.amsy.mobileoffloading.entities.ConnectedDevice;
-import com.amsy.mobileoffloading.entities.DeviceStatistics;
-import com.amsy.mobileoffloading.helper.Constants;
+import com.amsy.mobileoffloading.entities.ClientPayload;
+import com.amsy.mobileoffloading.entities.WorkerDevice;
+import com.amsy.mobileoffloading.entities.WorkerDeviceStatistics;
+import com.amsy.mobileoffloading.helper.GobalConstants;
 //import com.amsy.mobileoffloading.helper.FlushToFile;
 //import com.amsy.mobileoffloading.helper.MatrixDS;
-import com.amsy.mobileoffloading.helper.PayloadConverter;
-import com.amsy.mobileoffloading.services.Connector;
+import com.amsy.mobileoffloading.helper.PayloadInterface;
+import com.amsy.mobileoffloading.services.WorkerConnectorService;
 import com.amsy.mobileoffloading.services.MasterDiscoveryService;
-import com.amsy.mobileoffloading.services.NearbyConnectionsManager;
-import com.amsy.mobileoffloading.services.WorkAllocator;
+import com.amsy.mobileoffloading.services.WorkerConnectionManagerService;
+import com.amsy.mobileoffloading.services.WorkAllocatorService;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.nearby.connection.ConnectionInfo;
 import com.google.android.gms.nearby.connection.ConnectionResolution;
@@ -45,10 +45,10 @@ import java.util.List;
 public class MasterDiscovery extends AppCompatActivity {
 
     private RecyclerView rvConnectedDevices;
-    private ConnectedDevicesAdapter connectedDevicesAdapter;
-    private List<ConnectedDevice> connectedDevices = new ArrayList<>();
+    private DeviceConnectionAdapter deviceConnectionAdapter;
+    private List<WorkerDevice> workerDevices = new ArrayList<>();
     private MasterDiscoveryService masterDiscoveryService;
-    private ClientConnectionListener clientConnectionListener;
+    private WorkerConnectionListener workerConnectionListener;
     private PayloadListener payloadListener;
 
     @Override
@@ -56,16 +56,16 @@ public class MasterDiscovery extends AppCompatActivity {
         super.onPause();
         setStatus("Stopped", false);
         masterDiscoveryService.stop();
-        NearbyConnectionsManager.getInstance(getApplicationContext()).unregisterPayloadListener(payloadListener);
-        NearbyConnectionsManager.getInstance(getApplicationContext()).unregisterClientConnectionListener(clientConnectionListener);
+        WorkerConnectionManagerService.getInstance(getApplicationContext()).unregisterPayloadListener(payloadListener);
+        WorkerConnectionManagerService.getInstance(getApplicationContext()).unregisterClientConnectionListener(workerConnectionListener);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         startMasterDiscovery();
-        NearbyConnectionsManager.getInstance(getApplicationContext()).registerPayloadListener(payloadListener);
-        NearbyConnectionsManager.getInstance(getApplicationContext()).registerClientConnectionListener(clientConnectionListener);
+        WorkerConnectionManagerService.getInstance(getApplicationContext()).registerPayloadListener(payloadListener);
+        WorkerConnectionManagerService.getInstance(getApplicationContext()).registerClientConnectionListener(workerConnectionListener);
     }
 
     @Override
@@ -74,21 +74,21 @@ public class MasterDiscovery extends AppCompatActivity {
         setContentView(R.layout.activity_master_discovery);
 
         rvConnectedDevices = findViewById(R.id.rv_connected_devices);
-        connectedDevicesAdapter = new ConnectedDevicesAdapter(this, connectedDevices);
+        deviceConnectionAdapter = new DeviceConnectionAdapter(this, workerDevices);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getApplicationContext());
         rvConnectedDevices.setLayoutManager(linearLayoutManager);
 
-        rvConnectedDevices.setAdapter(connectedDevicesAdapter);
-        connectedDevicesAdapter.notifyDataSetChanged();
+        rvConnectedDevices.setAdapter(deviceConnectionAdapter);
+        deviceConnectionAdapter.notifyDataSetChanged();
 
         payloadListener = new PayloadListener() {
             @Override
             public void onPayloadReceived(String endpointId, Payload payload) {
                 Log.d("MASTER_DISCOVERY", "PayloadListener -  onPayloadReceived");
                 try {
-                    ClientPayLoad tPayload = PayloadConverter.fromPayload(payload);
-                    if (tPayload.getTag().equals(Constants.PayloadTags.DEVICE_STATS)) {
-                        updateDeviceStats(endpointId, (DeviceStatistics) tPayload.getData());
+                    ClientPayload tPayload = PayloadInterface.fromPayload(payload);
+                    if (tPayload.getTag().equals(GobalConstants.PayloadTags.DEVICE_STATS)) {
+                        updateDeviceStats(endpointId, (WorkerDeviceStatistics) tPayload.getData());
                     }
                 } catch (IOException | ClassNotFoundException e) {
                     e.printStackTrace();
@@ -103,11 +103,11 @@ public class MasterDiscovery extends AppCompatActivity {
         };
 
 
-        clientConnectionListener = new ClientConnectionListener() {
+        workerConnectionListener = new WorkerConnectionListener() {
             @Override
             public void onConnectionInitiated(String endpointId, ConnectionInfo connectionInfo) {
                 Log.d("MASTER_DISCOVERY", "clientConnectionListener -  onConnectionInitiated");
-                NearbyConnectionsManager.getInstance(getApplicationContext()).acceptConnection(endpointId);
+                WorkerConnectionManagerService.getInstance(getApplicationContext()).acceptConnection(endpointId);
             }
 
             @Override
@@ -118,10 +118,10 @@ public class MasterDiscovery extends AppCompatActivity {
                 int statusCode = connectionResolution.getStatus().getStatusCode();
                 if (statusCode == ConnectionsStatusCodes.STATUS_OK) {
                     Log.d("MASTER_DISCOVERY", "clientConnectionListener -  onConnectionResult - ACCEPTED");
-                    updateConnectedDeviceRequestStatus(endpointId, Constants.RequestStatus.ACCEPTED);
+                    updateConnectedDeviceRequestStatus(endpointId, GobalConstants.RequestStatus.ACCEPTED);
                 } else if (statusCode == ConnectionsStatusCodes.STATUS_CONNECTION_REJECTED) {
                     Log.d("MASTER_DISCOVERY", "clientConnectionListener -  onConnectionResult - REJECTED");
-                    updateConnectedDeviceRequestStatus(endpointId, Constants.RequestStatus.REJECTED);
+                    updateConnectedDeviceRequestStatus(endpointId, GobalConstants.RequestStatus.REJECTED);
                 } else if (statusCode == ConnectionsStatusCodes.STATUS_ERROR) {
                     Log.d("MASTER_DISCOVERY", "clientConnectionListener -  onConnectionResult - ERROR");
                     removeConnectedDevice(endpointId, true);
@@ -140,7 +140,7 @@ public class MasterDiscovery extends AppCompatActivity {
 
 
     public void assignTasks(View view) {
-        ArrayList<ConnectedDevice> readyDevices = getDevicesInReadyState();
+        ArrayList<WorkerDevice> readyDevices = getDevicesInReadyState();
         if (readyDevices.size() == 0) {
             Toast.makeText(getApplicationContext(), "No worker Available at the moment", Toast.LENGTH_LONG).show();
             onBackPressed();
@@ -151,24 +151,24 @@ public class MasterDiscovery extends AppCompatActivity {
         }
     }
 
-    private ArrayList<ConnectedDevice> getDevicesInReadyState() {
-        ArrayList<ConnectedDevice> res = new ArrayList<>();
-        for (int i = 0; i < connectedDevices.size(); i++) {
-            if (connectedDevices.get(i).getRequestStatus().equals(Constants.RequestStatus.ACCEPTED)) {
-                if (connectedDevices.get(i).getDeviceStats().getBatteryLevel() > WorkAllocator.ThresholdsHolder.MINIMUM_BATTERY_LEVEL) {
-                    res.add(connectedDevices.get(i));
+    private ArrayList<WorkerDevice> getDevicesInReadyState() {
+        ArrayList<WorkerDevice> res = new ArrayList<>();
+        for (int i = 0; i < workerDevices.size(); i++) {
+            if (workerDevices.get(i).getRequestStatus().equals(GobalConstants.RequestStatus.ACCEPTED)) {
+                if (workerDevices.get(i).getDeviceStats().getBatteryLevel() > WorkAllocatorService.ThresholdsHolder.MINIMUM_BATTERY_LEVEL) {
+                    res.add(workerDevices.get(i));
                 } else {
-                    ClientPayLoad tPayload = new ClientPayLoad();
-                    tPayload.setTag(Constants.PayloadTags.DISCONNECTED);
+                    ClientPayload tPayload = new ClientPayload();
+                    tPayload.setTag(GobalConstants.PayloadTags.DISCONNECTED);
 
-                    Connector.sendToDevice(getApplicationContext(), connectedDevices.get(i).getEndpointId(), tPayload);
+                    WorkerConnectorService.sendToDevice(getApplicationContext(), workerDevices.get(i).getEndpointId(), tPayload);
                 }
             } else {
                 Log.d("MASTER_DISCOVERY", "LOOPING");
-                ClientPayLoad tPayload = new ClientPayLoad();
-                tPayload.setTag(Constants.PayloadTags.DISCONNECTED);
+                ClientPayload tPayload = new ClientPayload();
+                tPayload.setTag(GobalConstants.PayloadTags.DISCONNECTED);
 
-                Connector.sendToDevice(getApplicationContext(), connectedDevices.get(i).getEndpointId(), tPayload);
+                WorkerConnectorService.sendToDevice(getApplicationContext(), workerDevices.get(i).getEndpointId(), tPayload);
             }
 
         }
@@ -176,11 +176,11 @@ public class MasterDiscovery extends AppCompatActivity {
     }
 
     private void updateConnectedDeviceRequestStatus(String endpointId, String status) {
-        for (int i = 0; i < connectedDevices.size(); i++) {
-            if (connectedDevices.get(i).getEndpointId().equals(endpointId)) {
-                connectedDevices.get(i).setRequestStatus(status);
+        for (int i = 0; i < workerDevices.size(); i++) {
+            if (workerDevices.get(i).getEndpointId().equals(endpointId)) {
+                workerDevices.get(i).setRequestStatus(status);
                 Log.d("MASTER_DISCOVERY", "Status of end point set to "+status);
-                connectedDevicesAdapter.notifyItemChanged(i);
+                deviceConnectionAdapter.notifyItemChanged(i);
                 break;
             }
         }
@@ -195,18 +195,18 @@ public class MasterDiscovery extends AppCompatActivity {
                 Log.d("MASTER_DISCOVERY", endpointId);
                 Log.d("MASTER_DISCOVERY", discoveredEndpointInfo.getServiceId() + " " + discoveredEndpointInfo.getEndpointName());
 
-                ConnectedDevice connectedDevice = new ConnectedDevice();
-                connectedDevice.setEndpointId(endpointId);
-                connectedDevice.setEndpointName(discoveredEndpointInfo.getEndpointName());
-                connectedDevice.setRequestStatus(Constants.RequestStatus.PENDING);
-                connectedDevice.setDeviceStats(new DeviceStatistics());
+                WorkerDevice workerDevice = new WorkerDevice();
+                workerDevice.setEndpointId(endpointId);
+                workerDevice.setEndpointName(discoveredEndpointInfo.getEndpointName());
+                workerDevice.setRequestStatus(GobalConstants.RequestStatus.PENDING);
+                workerDevice.setDeviceStats(new WorkerDeviceStatistics());
 
-                connectedDevices.add(connectedDevice);
-                connectedDevicesAdapter.notifyItemChanged(connectedDevices.size() - 1);
+                workerDevices.add(workerDevice);
+                deviceConnectionAdapter.notifyItemChanged(workerDevices.size() - 1);
 
                 Log.d("MASTER_DISCOVERY", "Added end point to connected devices : " +endpointId);
 
-                NearbyConnectionsManager.getInstance(getApplicationContext()).requestConnection(endpointId, "MASTER");
+                WorkerConnectionManagerService.getInstance(getApplicationContext()).requestConnection(endpointId, "MASTER");
                 Log.d("MASTER_DISCOVERY", "Requested connection for : " +endpointId);
 
             }
@@ -238,34 +238,34 @@ public class MasterDiscovery extends AppCompatActivity {
 
     private void removeConnectedDevice(String endpointId, boolean forceRemove) {
 
-        for (int i = 0; i < connectedDevices.size(); i++) {
-            boolean checkStatus = forceRemove ? true :  !connectedDevices.get(i).getRequestStatus().equals(Constants.RequestStatus.ACCEPTED);
-            if (connectedDevices.get(i).getEndpointId().equals(endpointId) && checkStatus) {
+        for (int i = 0; i < workerDevices.size(); i++) {
+            boolean checkStatus = forceRemove ? true :  !workerDevices.get(i).getRequestStatus().equals(GobalConstants.RequestStatus.ACCEPTED);
+            if (workerDevices.get(i).getEndpointId().equals(endpointId) && checkStatus) {
                 Log.d("MASTER_DISCOVERY", "Removed end point from connected devices " + endpointId );
-                connectedDevices.remove(i);
-                connectedDevicesAdapter.notifyItemChanged(i);
+                workerDevices.remove(i);
+                deviceConnectionAdapter.notifyItemChanged(i);
                 break;
             }
         }
     }
 
-    private void updateDeviceStats(String endpointId, DeviceStatistics deviceStats) {
+    private void updateDeviceStats(String endpointId, WorkerDeviceStatistics deviceStats) {
         canAssign(deviceStats);
-        for (int i = 0; i < connectedDevices.size(); i++) {
-            if (connectedDevices.get(i).getEndpointId().equals(endpointId)) {
-                connectedDevices.get(i).setDeviceStats(deviceStats);
+        for (int i = 0; i < workerDevices.size(); i++) {
+            if (workerDevices.get(i).getEndpointId().equals(endpointId)) {
+                workerDevices.get(i).setDeviceStats(deviceStats);
 
 //                Toast.makeText(getApplicationContext(), "Success: updated battery level: can proceed", Toast.LENGTH_SHORT).show();
-                connectedDevices.get(i).setRequestStatus(Constants.RequestStatus.ACCEPTED);
-                connectedDevicesAdapter.notifyItemChanged(i);
+                workerDevices.get(i).setRequestStatus(GobalConstants.RequestStatus.ACCEPTED);
+                deviceConnectionAdapter.notifyItemChanged(i);
                 break;
             }
         }
     }
 
-    void canAssign(DeviceStatistics deviceStats) {
+    void canAssign(WorkerDeviceStatistics deviceStats) {
         Button assignButton = findViewById(R.id.assignTask);
-        assignButton.setVisibility(deviceStats.getBatteryLevel() > WorkAllocator.ThresholdsHolder.MINIMUM_BATTERY_LEVEL ? View.VISIBLE : View.INVISIBLE);
+        assignButton.setVisibility(deviceStats.getBatteryLevel() > WorkAllocatorService.ThresholdsHolder.MINIMUM_BATTERY_LEVEL ? View.VISIBLE : View.INVISIBLE);
     }
 
     void setStatus(String text, boolean search) {
@@ -287,10 +287,10 @@ public class MasterDiscovery extends AppCompatActivity {
         finish();
     }
 
-    private void startMasterActivity(ArrayList<ConnectedDevice> connectedDevices) {
+    private void startMasterActivity(ArrayList<WorkerDevice> workerDevices) {
         Intent intent = new Intent(getApplicationContext(), MasterActivity.class);
         Bundle bundle = new Bundle();
-        bundle.putSerializable(Constants.CONNECTED_DEVICES, connectedDevices);
+        bundle.putSerializable(GobalConstants.CONNECTED_DEVICES, workerDevices);
         intent.putExtras(bundle);
         startActivity(intent);
         finish();

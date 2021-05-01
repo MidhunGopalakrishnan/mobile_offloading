@@ -9,12 +9,12 @@ import com.google.android.gms.nearby.connection.DiscoveryOptions;
 import com.google.android.gms.nearby.connection.EndpointDiscoveryCallback;
 import com.google.android.gms.nearby.connection.Strategy;
 
-public class Discovery {
+public class DiscoveryManager {
 
     private Context context;
     private DiscoveryOptions discoveryOptions;
 
-    public Discovery(Context context) {
+    public DiscoveryManager(Context context) {
         this.context = context;
         this.discoveryOptions =  new DiscoveryOptions.Builder().setStrategy(Strategy.P2P_CLUSTER).build();
     }

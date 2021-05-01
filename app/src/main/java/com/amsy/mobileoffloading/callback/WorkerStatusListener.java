@@ -1,13 +1,12 @@
 package com.amsy.mobileoffloading.callback;
 
-import com.amsy.mobileoffloading.entities.DeviceStatistics;
-import com.amsy.mobileoffloading.entities.WorkInfo;
-import com.amsy.mobileoffloading.helper.Constants;
+import com.amsy.mobileoffloading.entities.WorkerDeviceStatistics;
+import com.amsy.mobileoffloading.entities.WorkDataStatus;
 
 public interface WorkerStatusListener {
 
-    void onWorkStatusReceived(String endpointId, WorkInfo workInfo);
+    void onWorkStatusReceived(String endpointId, WorkDataStatus workDataStatus);
 
-     void onDeviceStatsReceived(String endpointId, DeviceStatistics deviceStats);
+     void onDeviceStatsReceived(String endpointId, WorkerDeviceStatistics deviceStats);
 
 }

@@ -4,22 +4,21 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.location.Location;
 
-import com.amsy.mobileoffloading.helper.Constants;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 
-public class LocationService {
+public class WorkerLocationService {
     private Context context;
     private FusedLocationProviderClient fusedLocationProviderClient;
-    private static LocationService locationService;
+    private static WorkerLocationService workerLocationService;
     private Location lastAvailableLocation;
     private LocationCallback locationCallback;
 
 
-    public LocationService(Context context) {
+    public WorkerLocationService(Context context) {
         this.context = context;
         this.fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(context);
         this.locationCallback = new LocationCallback() {
@@ -30,11 +29,11 @@ public class LocationService {
         };
     }
 
-    public static LocationService getInstance(Context context) {
-        if (locationService == null) {
-            locationService = new LocationService(context);
+    public static WorkerLocationService getInstance(Context context) {
+        if (workerLocationService == null) {
+            workerLocationService = new WorkerLocationService(context);
         }
-        return locationService;
+        return workerLocationService;
     }
 
     public Location getLastAvailableLocation() {

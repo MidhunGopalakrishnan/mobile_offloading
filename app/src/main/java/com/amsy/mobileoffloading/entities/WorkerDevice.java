@@ -2,10 +2,10 @@ package com.amsy.mobileoffloading.entities;
 
 import java.io.Serializable;
 
-public class ConnectedDevice implements Serializable {
+public class WorkerDevice implements Serializable {
     private String endpointId;
     private String endpointName;
-    private DeviceStatistics deviceStats;
+    private WorkerDeviceStatistics deviceStats;
     private String requestStatus;
 
 
@@ -25,11 +25,11 @@ public class ConnectedDevice implements Serializable {
         this.endpointName = endpointName;
     }
 
-    public DeviceStatistics getDeviceStats() {
+    public WorkerDeviceStatistics getDeviceStats() {
         return deviceStats;
     }
 
-    public void setDeviceStats(DeviceStatistics deviceStats) {
+    public void setDeviceStats(WorkerDeviceStatistics deviceStats) {
         this.deviceStats = deviceStats;
     }
 

@@ -4,7 +4,7 @@ import android.location.Location;
 
 import java.io.Serializable;
 
-public class DeviceStatistics implements Serializable {
+public class WorkerDeviceStatistics implements Serializable {
 
     private int totalCapacity;
     private int batteryLevel;

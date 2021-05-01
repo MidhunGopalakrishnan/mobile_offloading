@@ -13,23 +13,20 @@ import android.os.Handler;
 import android.util.Log;
 import android.widget.TextView;
 
-import com.amsy.mobileoffloading.adapters.WorkersAdapter;
-import com.amsy.mobileoffloading.callback.ComputationListener;
+import com.amsy.mobileoffloading.adapters.WorkerDeviceAdapter;
 import com.amsy.mobileoffloading.callback.WorkerStatusListener;
-import com.amsy.mobileoffloading.entities.ConnectedDevice;
-import com.amsy.mobileoffloading.entities.DeviceStatistics;
-import com.amsy.mobileoffloading.entities.WorkInfo;
+import com.amsy.mobileoffloading.entities.WorkerDevice;
+import com.amsy.mobileoffloading.entities.WorkerDeviceStatistics;
+import com.amsy.mobileoffloading.entities.WorkDataStatus;
 import com.amsy.mobileoffloading.entities.Worker;
-import com.amsy.mobileoffloading.helper.Constants;
-import com.amsy.mobileoffloading.helper.FlushToFile;
-import com.amsy.mobileoffloading.helper.MatrixDS;
-import com.amsy.mobileoffloading.services.DeviceStatisticsPublisher;
-import com.amsy.mobileoffloading.services.NearbyConnectionsManager;
-import com.amsy.mobileoffloading.services.WorkAllocator;
-import com.amsy.mobileoffloading.services.WorkerStatusSubscriber;
+import com.amsy.mobileoffloading.helper.GobalConstants;
+import com.amsy.mobileoffloading.helper.WriteToFile;
+import com.amsy.mobileoffloading.helper.MatrixManager;
+import com.amsy.mobileoffloading.services.DeviceStatsManagerService;
+import com.amsy.mobileoffloading.services.WorkerConnectionManagerService;
+import com.amsy.mobileoffloading.services.WorkAllocatorService;
+import com.amsy.mobileoffloading.services.WorkerStatusManager;
 import com.app.progresviews.ProgressWheel;
-
-import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -40,28 +37,28 @@ public class MasterActivity extends AppCompatActivity {
 
     private RecyclerView rvWorkers;
 
-    private HashMap<String, WorkerStatusSubscriber> workerStatusSubscriberMap = new HashMap<>();
+    private HashMap<String, WorkerStatusManager> workerStatusSubscriberMap = new HashMap<>();
 
     private ArrayList<Worker> workers = new ArrayList<>();
-    private WorkersAdapter workersAdapter;
+    private WorkerDeviceAdapter workerDeviceAdapter;
 
 
     /* [row1 x cols1] * [row2 * cols2] */
-    private int rows1 = Constants.matrix_rows;
-    private int cols1 = Constants.matrix_columns;
-    private int rows2 = Constants.matrix_columns;
-    private int cols2 = Constants.matrix_rows;
+    private int rows1 = GobalConstants.matrix_rows;
+    private int cols1 = GobalConstants.matrix_columns;
+    private int rows2 = GobalConstants.matrix_columns;
+    private int cols2 = GobalConstants.matrix_rows;
 
     private int[][] matrix1;
     private int[][] matrix2;
 
-    private WorkAllocator workAllocator;
+    private WorkAllocatorService workAllocatorService;
 
     private int workAmount;
     private int totalPartitions;
     private Handler handler;
     private Runnable runnable;
-    private DeviceStatisticsPublisher deviceStatsPublisher;
+    private DeviceStatsManagerService deviceStatsPublisher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -103,15 +100,15 @@ public class MasterActivity extends AppCompatActivity {
         super.onResume();
         startWorkerStatusSubscribers();
         deviceStatsPublisher.start();
-        handler.postDelayed(runnable, Constants.UPDATE_INTERVAL_UI);
+        handler.postDelayed(runnable, GobalConstants.UPDATE_INTERVAL_UI);
     }
 
     @Override
     public void onBackPressed() {
         for (Worker w : workers) {
-            updateWorkerConnectionStatus(w.getEndpointId(), Constants.WorkStatus.DISCONNECTED);
-            workAllocator.removeWorker(w.getEndpointId());
-            NearbyConnectionsManager.getInstance(getApplicationContext()).disconnectFromEndpoint(w.getEndpointId());
+            updateWorkerConnectionStatus(w.getEndpointId(), GobalConstants.WorkStatus.DISCONNECTED);
+            workAllocatorService.removeWorker(w.getEndpointId());
+            WorkerConnectionManagerService.getInstance(getApplicationContext()).disconnectFromEndpoint(w.getEndpointId());
         }
         super.onBackPressed();
         finish();
@@ -120,14 +117,14 @@ public class MasterActivity extends AppCompatActivity {
     private void init() {
         totalPartitions = rows1 * cols2;
         updateProgress(0);
-        matrix1 = MatrixDS.createMatrix(rows1, cols1);
-        matrix2 = MatrixDS.createMatrix(rows2, cols2);
+        matrix1 = MatrixManager.createMatrix(rows1, cols1);
+        matrix2 = MatrixManager.createMatrix(rows2, cols2);
 
-        workAllocator = new WorkAllocator(getApplicationContext(), workers, matrix1, matrix2, slaveTime -> {
+        workAllocatorService = new WorkAllocatorService(getApplicationContext(), workers, matrix1, matrix2, slaveTime -> {
             TextView slave = findViewById(R.id.slaveTime);
             slave.setText("Execution time (Slave): " + slaveTime + "ms");
         });
-        workAllocator.beginDistributedComputation();
+        workAllocatorService.beginDistributedComputation();
     }
 
     private void updateProgress(int done) {
@@ -150,13 +147,13 @@ public class MasterActivity extends AppCompatActivity {
 
 
     private void setAdapters() {
-        workersAdapter = new WorkersAdapter(this, workers);
+        workerDeviceAdapter = new WorkerDeviceAdapter(this, workers);
 
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getApplicationContext());
         rvWorkers.setLayoutManager(linearLayoutManager);
 
-        rvWorkers.setAdapter(workersAdapter);
-        workersAdapter.notifyDataSetChanged();
+        rvWorkers.setAdapter(workerDeviceAdapter);
+        workerDeviceAdapter.notifyDataSetChanged();
     }
 
 
@@ -164,33 +161,33 @@ public class MasterActivity extends AppCompatActivity {
         try {
             Bundle bundle = getIntent().getExtras();
 
-            ArrayList<ConnectedDevice> connectedDevices = (ArrayList<ConnectedDevice>) bundle.getSerializable(Constants.CONNECTED_DEVICES);
-            addToWorkers(connectedDevices);
+            ArrayList<WorkerDevice> workerDevices = (ArrayList<WorkerDevice>) bundle.getSerializable(GobalConstants.CONNECTED_DEVICES);
+            addToWorkers(workerDevices);
             Log.d("CHECK", "Added a connected Device as worker");
         } catch (NullPointerException e) {
             e.printStackTrace();
         }
     }
 
-    private void addToWorkers(ArrayList<ConnectedDevice> connectedDevices) {
-        for (ConnectedDevice connectedDevice : connectedDevices) {
+    private void addToWorkers(ArrayList<WorkerDevice> workerDevices) {
+        for (WorkerDevice workerDevice : workerDevices) {
             Worker worker = new Worker();
-            worker.setEndpointId(connectedDevice.getEndpointId());
-            worker.setEndpointName(connectedDevice.getEndpointName());
+            worker.setEndpointId(workerDevice.getEndpointId());
+            worker.setEndpointName(workerDevice.getEndpointName());
 
-            WorkInfo workStatus = new WorkInfo();
-            workStatus.setStatusInfo(Constants.WorkStatus.WORKING);
+            WorkDataStatus workStatus = new WorkDataStatus();
+            workStatus.setStatusInfo(GobalConstants.WorkStatus.WORKING);
 
             worker.setWorkStatus(workStatus);
-            worker.setDeviceStats(new DeviceStatistics());
+            worker.setDeviceStats(new WorkerDeviceStatistics());
 
             workers.add(worker);
         }
     }
 
     private void computeMatrixMultiplicationOnMaster() {
-        matrix1 = MatrixDS.createMatrix(rows1, cols1);
-        matrix2 = MatrixDS.createMatrix(rows2, cols2);
+        matrix1 = MatrixManager.createMatrix(rows1, cols1);
+        matrix2 = MatrixManager.createMatrix(rows2, cols2);
         Needle.onBackgroundThread().execute(() -> {
             long startTime = System.currentTimeMillis();
             int[][] mul = new int[rows1][cols2];
@@ -204,7 +201,7 @@ public class MasterActivity extends AppCompatActivity {
             }
             long endTime = System.currentTimeMillis();
             long totalTime = endTime - startTime;
-            FlushToFile.writeTextToFile(getApplicationContext(), "exec_time_master_alone.txt", false, totalTime + "ms");
+            WriteToFile.writeTextToFile(getApplicationContext(), "exec_time_master_alone.txt", false, totalTime + "ms");
             TextView master = findViewById(R.id.masterTime);
             master.setText("Execution time (Master): " + totalTime + "ms");
         });
@@ -213,13 +210,13 @@ public class MasterActivity extends AppCompatActivity {
 
 
     private void setupDeviceBatteryStatsCollector() {
-        deviceStatsPublisher = new DeviceStatisticsPublisher(getApplicationContext(), null, Constants.UPDATE_INTERVAL_UI);
+        deviceStatsPublisher = new DeviceStatsManagerService(getApplicationContext(), null, GobalConstants.UPDATE_INTERVAL_UI);
         handler = new Handler();
         runnable = () -> {
-            String deviceStatsStr = DeviceStatisticsPublisher.getBatteryLevel(this) + "%"
-                    + "\t" + (DeviceStatisticsPublisher.isPluggedIn(this) ? "CHARGING" : "NOT CHARGING");
-            FlushToFile.writeTextToFile(getApplicationContext(), "master_battery.txt", true, deviceStatsStr);
-            handler.postDelayed(runnable, Constants.UPDATE_INTERVAL_UI);
+            String deviceStatsStr = DeviceStatsManagerService.getBatteryLevel(this) + "%"
+                    + "\t" + (DeviceStatsManagerService.isPluggedIn(this) ? "CHARGING" : "NOT CHARGING");
+            WriteToFile.writeTextToFile(getApplicationContext(), "master_battery.txt", true, deviceStatsStr);
+            handler.postDelayed(runnable, GobalConstants.UPDATE_INTERVAL_UI);
         };
     }
 
@@ -231,7 +228,7 @@ public class MasterActivity extends AppCompatActivity {
             Log.d("DISCONNECTED--", workers.get(i).getEndpointId());
             if (workers.get(i).getEndpointId().equals(endpointId)) {
                 workers.get(i).getWorkStatus().setStatusInfo(status);
-                workersAdapter.notifyDataSetChanged();
+                workerDeviceAdapter.notifyDataSetChanged();
                 break;
             }
         }
@@ -244,36 +241,36 @@ public class MasterActivity extends AppCompatActivity {
                 continue;
             }
 
-            WorkerStatusSubscriber workerStatusSubscriber = new WorkerStatusSubscriber(getApplicationContext(), worker.getEndpointId(), new WorkerStatusListener() {
+            WorkerStatusManager workerStatusManager = new WorkerStatusManager(getApplicationContext(), worker.getEndpointId(), new WorkerStatusListener() {
                 @Override
-                public void onWorkStatusReceived(String endpointId, WorkInfo workStatus) {
+                public void onWorkStatusReceived(String endpointId, WorkDataStatus workStatus) {
 
-                    if (workStatus.getStatusInfo().equals(Constants.WorkStatus.DISCONNECTED)) {
-                        updateWorkerConnectionStatus(endpointId, Constants.WorkStatus.DISCONNECTED);
-                        workAllocator.removeWorker(endpointId);
-                        NearbyConnectionsManager.getInstance(getApplicationContext()).rejectConnection(endpointId);
+                    if (workStatus.getStatusInfo().equals(GobalConstants.WorkStatus.DISCONNECTED)) {
+                        updateWorkerConnectionStatus(endpointId, GobalConstants.WorkStatus.DISCONNECTED);
+                        workAllocatorService.removeWorker(endpointId);
+                        WorkerConnectionManagerService.getInstance(getApplicationContext()).rejectConnection(endpointId);
                     } else {
                         updateWorkerStatus(endpointId, workStatus);
                     }
-                    workAllocator.checkWorkCompletion(getWorkAmount());
+                    workAllocatorService.checkWorkCompletion(getWorkAmount());
                 }
 
                 @Override
-                public void onDeviceStatsReceived(String endpointId, DeviceStatistics deviceStats) {
+                public void onDeviceStatsReceived(String endpointId, WorkerDeviceStatistics deviceStats) {
                     updateWorkerStatus(endpointId, deviceStats);
 
                     String deviceStatsStr = deviceStats.getBatteryLevel() + "%"
                             + "\t" + (deviceStats.isCharging() ? "CHARGING" : "NOT CHARGING")
                             + "\t\t" + deviceStats.getLatitude()
                             + "\t" + deviceStats.getLongitude();
-                    FlushToFile.writeTextToFile(getApplicationContext(), endpointId + ".txt", true, deviceStatsStr);
+                    WriteToFile.writeTextToFile(getApplicationContext(), endpointId + ".txt", true, deviceStatsStr);
                     Log.d("MASTER_ACTIVITY", "WORK AMOUNT: " + getWorkAmount());
-                    workAllocator.checkWorkCompletion(getWorkAmount());
+                    workAllocatorService.checkWorkCompletion(getWorkAmount());
                 }
             });
 
-            workerStatusSubscriber.start();
-            workerStatusSubscriberMap.put(worker.getEndpointId(), workerStatusSubscriber);
+            workerStatusManager.start();
+            workerStatusSubscriberMap.put(worker.getEndpointId(), workerStatusManager);
         }
     }
 
@@ -287,34 +284,34 @@ public class MasterActivity extends AppCompatActivity {
         return sum;
     }
 
-    private void updateWorkerStatus(String endpointId, WorkInfo workStatus) {
+    private void updateWorkerStatus(String endpointId, WorkDataStatus workStatus) {
         for (int i = 0; i < workers.size(); i++) {
             Worker worker = workers.get(i);
 
             if (worker.getEndpointId().equals(endpointId)) {
                 worker.setWorkStatus(workStatus);
 
-                if (workStatus.getStatusInfo().equals(Constants.WorkStatus.WORKING) && workAllocator.isItNewWork(workStatus.getPartitionIndexInfo())) {
+                if (workStatus.getStatusInfo().equals(GobalConstants.WorkStatus.WORKING) && workAllocatorService.isItNewWork(workStatus.getPartitionIndexInfo())) {
                     workers.get(i).setWorkAmount(workers.get(i).getWorkAmount() + 1);
                     workAmount += 1;
                 }
 
-                workAllocator.updateWorkStatus(worker, workStatus);
+                workAllocatorService.updateWorkStatus(worker, workStatus);
 
-                workersAdapter.notifyItemChanged(i);
+                workerDeviceAdapter.notifyItemChanged(i);
                 break;
             }
         }
         updateProgress(workAmount);
     }
 
-    private void updateWorkerStatus(String endpointId, DeviceStatistics deviceStats) {
+    private void updateWorkerStatus(String endpointId, WorkerDeviceStatistics deviceStats) {
         for (int i = 0; i < workers.size(); i++) {
             Worker worker = workers.get(i);
 
             if (worker.getEndpointId().equals(endpointId)) {
                 worker.setDeviceStats(deviceStats);
-                Location masterLocation = DeviceStatisticsPublisher.getLocation(this);
+                Location masterLocation = DeviceStatsManagerService.getLocation(this);
                 if (deviceStats.isLocationValid() && masterLocation != null) {
                     float[] results = new float[1];
                     Location.distanceBetween(masterLocation.getLatitude(), masterLocation.getLongitude(),
@@ -324,16 +321,16 @@ public class MasterActivity extends AppCompatActivity {
                     worker.setDistanceFromMaster(results[0]);
                 }
 
-                workersAdapter.notifyItemChanged(i);
+                workerDeviceAdapter.notifyItemChanged(i);
             }
         }
     }
 
     private void stopWorkerStatusSubscribers() {
         for (Worker worker : workers) {
-            WorkerStatusSubscriber workerStatusSubscriber = workerStatusSubscriberMap.get(worker.getEndpointId());
-            if (workerStatusSubscriber != null) {
-                workerStatusSubscriber.stop();
+            WorkerStatusManager workerStatusManager = workerStatusSubscriberMap.get(worker.getEndpointId());
+            if (workerStatusManager != null) {
+                workerStatusManager.stop();
                 workerStatusSubscriberMap.remove(worker.getEndpointId());
             }
         }

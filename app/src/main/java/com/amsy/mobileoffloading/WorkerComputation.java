@@ -4,25 +4,23 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Context;
-import android.content.Intent;
 import android.os.BatteryManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 
-import com.amsy.mobileoffloading.callback.ClientConnectionListener;
+import com.amsy.mobileoffloading.callback.WorkerConnectionListener;
 import com.amsy.mobileoffloading.callback.PayloadListener;
-import com.amsy.mobileoffloading.entities.ClientPayLoad;
+import com.amsy.mobileoffloading.entities.ClientPayload;
 import com.amsy.mobileoffloading.entities.WorkData;
-import com.amsy.mobileoffloading.entities.WorkInfo;
-import com.amsy.mobileoffloading.helper.Constants;
-import com.amsy.mobileoffloading.helper.DataTransfer;
-import com.amsy.mobileoffloading.helper.MatrixDS;
-import com.amsy.mobileoffloading.helper.PayloadConverter;
-import com.amsy.mobileoffloading.services.Advertiser;
-import com.amsy.mobileoffloading.services.DeviceStatisticsPublisher;
-import com.amsy.mobileoffloading.services.NearbyConnectionsManager;
+import com.amsy.mobileoffloading.entities.WorkDataStatus;
+import com.amsy.mobileoffloading.helper.GobalConstants;
+import com.amsy.mobileoffloading.helper.PayloadManager;
+import com.amsy.mobileoffloading.helper.MatrixManager;
+import com.amsy.mobileoffloading.helper.PayloadInterface;
+import com.amsy.mobileoffloading.services.DeviceStatsManagerService;
+import com.amsy.mobileoffloading.services.WorkerConnectionManagerService;
 import com.google.android.gms.nearby.connection.ConnectionInfo;
 import com.google.android.gms.nearby.connection.ConnectionResolution;
 import com.google.android.gms.nearby.connection.Payload;
@@ -35,8 +33,8 @@ import pl.droidsonroids.gif.GifImageView;
 
 public class WorkerComputation extends AppCompatActivity {
     private String masterId;
-    private DeviceStatisticsPublisher deviceStatsPublisher;
-    private ClientConnectionListener connectionListener;
+    private DeviceStatsManagerService deviceStatsPublisher;
+    private WorkerConnectionListener connectionListener;
     private PayloadListener payloadCallback;
     private int currentPartitionIndex;
     private HashSet<Integer> finishedWork = new HashSet<>();
@@ -91,11 +89,11 @@ public class WorkerComputation extends AppCompatActivity {
 
     private void extractBundle() {
         Bundle bundle = getIntent().getExtras();
-        this.masterId = bundle.getString(Constants.MASTER_ENDPOINT_ID);
+        this.masterId = bundle.getString(GobalConstants.MASTER_ENDPOINT_ID);
     }
 
     private void startDeviceStatsPublisher() {
-        deviceStatsPublisher = new DeviceStatisticsPublisher(getApplicationContext(), masterId, Constants.UPDATE_INTERVAL_UI);
+        deviceStatsPublisher = new DeviceStatsManagerService(getApplicationContext(), masterId, GobalConstants.UPDATE_INTERVAL_UI);
     }
 
     private void connectToMaster() {
@@ -110,11 +108,11 @@ public class WorkerComputation extends AppCompatActivity {
 
             }
         };
-        NearbyConnectionsManager.getInstance(getApplicationContext()).acceptConnection(masterId);
+        WorkerConnectionManagerService.getInstance(getApplicationContext()).acceptConnection(masterId);
     }
 
     private void setConnectionCallback() {
-        connectionListener = new ClientConnectionListener() {
+        connectionListener = new WorkerConnectionListener() {
             @Override
             public void onConnectionInitiated(String id, ConnectionInfo connectionInfo) {
             }
@@ -138,52 +136,52 @@ public class WorkerComputation extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        NearbyConnectionsManager.getInstance(getApplicationContext()).registerPayloadListener(payloadCallback);
-        NearbyConnectionsManager.getInstance(getApplicationContext()).registerClientConnectionListener(connectionListener);
+        WorkerConnectionManagerService.getInstance(getApplicationContext()).registerPayloadListener(payloadCallback);
+        WorkerConnectionManagerService.getInstance(getApplicationContext()).registerClientConnectionListener(connectionListener);
         deviceStatsPublisher.start();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        NearbyConnectionsManager.getInstance(getApplicationContext()).unregisterPayloadListener(payloadCallback);
-        NearbyConnectionsManager.getInstance(getApplicationContext()).unregisterClientConnectionListener(connectionListener);
+        WorkerConnectionManagerService.getInstance(getApplicationContext()).unregisterPayloadListener(payloadCallback);
+        WorkerConnectionManagerService.getInstance(getApplicationContext()).unregisterClientConnectionListener(connectionListener);
         deviceStatsPublisher.stop();
     }
 
     @Override
     public void finish() {
         super.finish();
-        NearbyConnectionsManager.getInstance(getApplicationContext()).disconnectFromEndpoint(masterId);
+        WorkerConnectionManagerService.getInstance(getApplicationContext()).disconnectFromEndpoint(masterId);
         currentPartitionIndex = 0;
     }
 
 
     public void onDisconnect(View view) {
-        WorkInfo workStatus = new WorkInfo();
+        WorkDataStatus workStatus = new WorkDataStatus();
         workStatus.setPartitionIndexInfo(currentPartitionIndex);
-        workStatus.setStatusInfo(Constants.WorkStatus.DISCONNECTED);
+        workStatus.setStatusInfo(GobalConstants.WorkStatus.DISCONNECTED);
 
-        ClientPayLoad tPayload1 = new ClientPayLoad();
-        tPayload1.setTag(Constants.PayloadTags.WORK_STATUS);
+        ClientPayload tPayload1 = new ClientPayload();
+        tPayload1.setTag(GobalConstants.PayloadTags.WORK_STATUS);
         tPayload1.setData(workStatus);
 
-        DataTransfer.sendPayload(getApplicationContext(), masterId, tPayload1);
+        PayloadManager.sendPayload(getApplicationContext(), masterId, tPayload1);
         navBack();
     }
 
     public void startWorking(Payload payload) {
-        WorkInfo workStatus = new WorkInfo();
-        ClientPayLoad sendPayload = new ClientPayLoad();
-        sendPayload.setTag(Constants.PayloadTags.WORK_STATUS);
+        WorkDataStatus workStatus = new WorkDataStatus();
+        ClientPayload sendPayload = new ClientPayload();
+        sendPayload.setTag(GobalConstants.PayloadTags.WORK_STATUS);
 
         try {
-            ClientPayLoad receivedPayload = PayloadConverter.fromPayload(payload);
-            if (receivedPayload.getTag().equals(Constants.PayloadTags.WORK_DATA)) {
+            ClientPayload receivedPayload = PayloadInterface.fromPayload(payload);
+            if (receivedPayload.getTag().equals(GobalConstants.PayloadTags.WORK_DATA)) {
                 setStatusText("Working now", true);
 
                 WorkData workData = (WorkData) receivedPayload.getData();
-                int dotProduct = MatrixDS.getDotProduct(workData.getRows(), workData.getCols());
+                int dotProduct = MatrixManager.getDotProduct(workData.getRows(), workData.getCols());
 
                 Log.d("WORKER_COMPUTATION", "Partition Index: " + workData.getPartitionIndex());
                 if (!finishedWork.contains(workData.getPartitionIndex())) {
@@ -195,23 +193,23 @@ public class WorkerComputation extends AppCompatActivity {
                 workStatus.setPartitionIndexInfo(workData.getPartitionIndex());
                 workStatus.setResultInfo(dotProduct);
 
-                workStatus.setStatusInfo(Constants.WorkStatus.WORKING);
+                workStatus.setStatusInfo(GobalConstants.WorkStatus.WORKING);
                 sendPayload.setData(workStatus);
-                DataTransfer.sendPayload(getApplicationContext(), masterId, sendPayload);
+                PayloadManager.sendPayload(getApplicationContext(), masterId, sendPayload);
 
-            } else if (receivedPayload.getTag().equals(Constants.PayloadTags.FAREWELL)) {
+            } else if (receivedPayload.getTag().equals(GobalConstants.PayloadTags.FAREWELL)) {
                 // end measuring energy level
                 finalEnergyWorker =
                         mBatteryManager.getLongProperty(BatteryManager.BATTERY_PROPERTY_ENERGY_COUNTER);
                 energyConsumedWorker = Math.abs(initialEnergyWorker-finalEnergyWorker);
                 onWorkFinished("Work Done !!");
                 Log.d("WORKER_COMPUTATION", "Work Done");
-                workStatus.setStatusInfo(Constants.WorkStatus.FINISHED);
+                workStatus.setStatusInfo(GobalConstants.WorkStatus.FINISHED);
                 sendPayload.setData(workStatus);
-                DataTransfer.sendPayload(getApplicationContext(), masterId, sendPayload);
+                PayloadManager.sendPayload(getApplicationContext(), masterId, sendPayload);
                 deviceStatsPublisher.stop();
 
-            } else if (receivedPayload.getTag().equals(Constants.PayloadTags.DISCONNECTED)) {
+            } else if (receivedPayload.getTag().equals(GobalConstants.PayloadTags.DISCONNECTED)) {
                 navBack();
             }
 

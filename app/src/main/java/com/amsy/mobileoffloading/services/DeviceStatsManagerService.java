@@ -10,12 +10,12 @@ import android.os.Looper;
 import android.util.Log;
 
 
-import com.amsy.mobileoffloading.entities.ClientPayLoad;
-import com.amsy.mobileoffloading.entities.DeviceStatistics;
-import com.amsy.mobileoffloading.helper.Constants;
-import com.amsy.mobileoffloading.helper.DataTransfer;
+import com.amsy.mobileoffloading.entities.ClientPayload;
+import com.amsy.mobileoffloading.entities.WorkerDeviceStatistics;
+import com.amsy.mobileoffloading.helper.GobalConstants;
+import com.amsy.mobileoffloading.helper.PayloadManager;
 
-public class DeviceStatisticsPublisher {
+public class DeviceStatsManagerService {
 
     private Context context;
     private String endpointId;
@@ -23,7 +23,7 @@ public class DeviceStatisticsPublisher {
     private Runnable runnable;
     private int interval;
 
-    public DeviceStatisticsPublisher(Context context, String endpointId, int updateInterval) {
+    public DeviceStatsManagerService(Context context, String endpointId, int updateInterval) {
         this.context = context;
         this.endpointId = endpointId;
         this.interval = updateInterval;
@@ -36,33 +36,33 @@ public class DeviceStatisticsPublisher {
 
     public void start() {
         handler.postDelayed(runnable,  interval);
-        LocationService.getInstance(context).start(interval);
+        WorkerLocationService.getInstance(context).start(interval);
     }
 
     public void stop() {
         handler.removeCallbacks(runnable);
-        LocationService.getInstance(context).stop();
+        WorkerLocationService.getInstance(context).stop();
     }
 
     private void publish() {
-        DeviceStatisticsPublisher.publish(this.context, this.endpointId);
+        DeviceStatsManagerService.publish(this.context, this.endpointId);
     }
 
     public static void publish(Context context, String endpointId) {
         // Get Device Statistics
-        DeviceStatistics deviceStats = new DeviceStatistics();
+        WorkerDeviceStatistics deviceStats = new WorkerDeviceStatistics();
             deviceStats.setBatteryLevel(getBatteryLevel(context));
             deviceStats.setCharging(isPluggedIn(context));
             deviceStats.setLocation(getLocation(context));
         if(endpointId != null) {
-            ClientPayLoad payload = new ClientPayLoad().setTag(Constants.PayloadTags.DEVICE_STATS).setData(deviceStats);
-            DataTransfer.sendPayload(context, endpointId, payload);
+            ClientPayload payload = new ClientPayload().setTag(GobalConstants.PayloadTags.DEVICE_STATS).setData(deviceStats);
+            PayloadManager.sendPayload(context, endpointId, payload);
         }
         Log.d("DEVICE_STATS", "DEVICE STATUS B: " + deviceStats.getBatteryLevel() + " P: " + deviceStats.isCharging() +  " L: " + deviceStats.getLatitude() + " " + deviceStats.getLongitude());
     }
 
     public static Location getLocation(Context context) {
-        Location location = LocationService.getInstance(context).getLastAvailableLocation();
+        Location location = WorkerLocationService.getInstance(context).getLastAvailableLocation();
         return location;
     }
 

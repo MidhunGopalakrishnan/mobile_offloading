@@ -2,7 +2,7 @@ package com.amsy.mobileoffloading.entities;
 
 import java.io.Serializable;
 
-public class ClientPayLoad implements Serializable {
+public class ClientPayload implements Serializable {
     private String tag;
     private Object data;
 
@@ -10,7 +10,7 @@ public class ClientPayLoad implements Serializable {
         return tag;
     }
 
-    public ClientPayLoad setTag(String tag) {
+    public ClientPayload setTag(String tag) {
         this.tag = tag;
         return this;
     }
@@ -19,7 +19,7 @@ public class ClientPayLoad implements Serializable {
         return data;
     }
 
-    public ClientPayLoad setData(Object data) {
+    public ClientPayload setData(Object data) {
         this.data = data;
         return this;
     }

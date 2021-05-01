@@ -1,6 +1,6 @@
 package com.amsy.mobileoffloading.helper;
 
-import com.amsy.mobileoffloading.entities.ClientPayLoad;
+import com.amsy.mobileoffloading.entities.ClientPayload;
 import com.google.android.gms.nearby.connection.Payload;
 
 import java.io.ByteArrayInputStream;
@@ -9,8 +9,8 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
-public class PayloadConverter {
-    public static Payload toPayload(ClientPayLoad tPayload) throws IOException {
+public class PayloadInterface {
+    public static Payload toPayload(ClientPayload tPayload) throws IOException {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
         ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);
@@ -23,12 +23,12 @@ public class PayloadConverter {
         return payload;
     }
 
-    public static ClientPayLoad fromPayload(Payload payload) throws IOException, ClassNotFoundException {
+    public static ClientPayload fromPayload(Payload payload) throws IOException, ClassNotFoundException {
         byte[] receivedBytes = payload.asBytes();
 
         ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(receivedBytes);
         ObjectInputStream objectInputStream = new ObjectInputStream(byteArrayInputStream);
 
-        return (ClientPayLoad) objectInputStream.readObject();
+        return (ClientPayload) objectInputStream.readObject();
     }
 }

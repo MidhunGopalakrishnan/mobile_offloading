@@ -1,7 +1,6 @@
 package com.amsy.mobileoffloading.adapters;
 
 import android.content.Context;
-import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,28 +8,27 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.amsy.mobileoffloading.R;
-import com.amsy.mobileoffloading.entities.ConnectedDevice;
-import com.amsy.mobileoffloading.helper.Constants;
+import com.amsy.mobileoffloading.entities.WorkerDevice;
+import com.amsy.mobileoffloading.helper.GobalConstants;
 
 import java.util.List;
 
-public class ConnectedDevicesAdapter extends RecyclerView.Adapter<ConnectedDevicesAdapter.ViewHolder>{
+public class DeviceConnectionAdapter extends RecyclerView.Adapter<DeviceConnectionAdapter.ViewHolder>{
 
     private Context context;
-    private List<ConnectedDevice> connectedDevices;
+    private List<WorkerDevice> workerDevices;
 
-    public ConnectedDevicesAdapter(@NonNull Context context, List<ConnectedDevice> connectedDevices) {
+    public DeviceConnectionAdapter(@NonNull Context context, List<WorkerDevice> workerDevices) {
         this.context = context;
-        this.connectedDevices = connectedDevices;
+        this.workerDevices = workerDevices;
     }
 
     @NonNull
     @Override
-    public ConnectedDevicesAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+    public DeviceConnectionAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         LayoutInflater layoutInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         View itemView = layoutInflater.inflate(R.layout.connected_device_item, parent, false);
 
@@ -38,15 +36,15 @@ public class ConnectedDevicesAdapter extends RecyclerView.Adapter<ConnectedDevic
     }
 
     @Override
-    public void onBindViewHolder(@NonNull ConnectedDevicesAdapter.ViewHolder holder, int position) {
-        holder.setClientId(connectedDevices.get(position).getEndpointId(), connectedDevices.get(position).getEndpointName());
-        holder.setBatteryLevel(connectedDevices.get(position).getDeviceStats().getBatteryLevel());
-        holder.setRequestStatus(connectedDevices.get(position).getRequestStatus());
+    public void onBindViewHolder(@NonNull DeviceConnectionAdapter.ViewHolder holder, int position) {
+        holder.setClientId(workerDevices.get(position).getEndpointId(), workerDevices.get(position).getEndpointName());
+        holder.setBatteryLevel(workerDevices.get(position).getDeviceStats().getBatteryLevel());
+        holder.setRequestStatus(workerDevices.get(position).getRequestStatus());
     }
 
     @Override
     public int getItemCount() {
-        return connectedDevices.size();
+        return workerDevices.size();
     }
 
     protected class ViewHolder extends RecyclerView.ViewHolder {
@@ -75,9 +73,9 @@ public class ConnectedDevicesAdapter extends RecyclerView.Adapter<ConnectedDevic
         }
 
         public void setRequestStatus(String requestStatus) {
-            if (requestStatus.equals(Constants.RequestStatus.ACCEPTED)) {
+            if (requestStatus.equals(GobalConstants.RequestStatus.ACCEPTED)) {
                 this.RequestStatus.setBackgroundResource(R.drawable.ic_outline_check_circle_24);
-            } else if (requestStatus.equals(Constants.RequestStatus.REJECTED)) {
+            } else if (requestStatus.equals(GobalConstants.RequestStatus.REJECTED)) {
                 this.RequestStatus.setBackgroundResource(R.drawable.ic_outline_cancel_24);
             } else {
                 this.RequestStatus.setBackgroundResource(R.drawable.ic_outline_pending_24);

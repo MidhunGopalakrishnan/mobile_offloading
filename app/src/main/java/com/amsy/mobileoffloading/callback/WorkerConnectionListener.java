@@ -3,7 +3,7 @@ package com.amsy.mobileoffloading.callback;
 import com.google.android.gms.nearby.connection.ConnectionInfo;
 import com.google.android.gms.nearby.connection.ConnectionResolution;
 
-public interface ClientConnectionListener {
+public interface WorkerConnectionListener {
     void onConnectionInitiated(String endpointId, ConnectionInfo connectionInfo);
 
     void onConnectionResult(String endpointId, ConnectionResolution connectionResolution);

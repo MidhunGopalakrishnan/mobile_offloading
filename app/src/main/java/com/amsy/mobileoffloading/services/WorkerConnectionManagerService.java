@@ -2,12 +2,11 @@ package com.amsy.mobileoffloading.services;
 
 import android.content.Context;
 import android.util.Log;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
-import com.amsy.mobileoffloading.callback.ClientConnectionListener;
+import com.amsy.mobileoffloading.callback.WorkerConnectionListener;
 import com.amsy.mobileoffloading.callback.PayloadListener;
 import com.google.android.gms.nearby.Nearby;
 import com.google.android.gms.nearby.connection.AdvertisingOptions;
@@ -21,24 +20,24 @@ import com.google.android.gms.tasks.Task;
 
 import java.util.HashSet;
 
-public class NearbyConnectionsManager {
+public class WorkerConnectionManagerService {
 
-    private static NearbyConnectionsManager nearbyConnectionsManager;
+    private static WorkerConnectionManagerService workerConnectionManagerService;
     private Context context;
 
     private ConnectionLifecycleCallback connectionLifecycleCallback;
-    private HashSet<ClientConnectionListener> clientConnectionListenerSet = new HashSet<>();
+    private HashSet<WorkerConnectionListener> workerConnectionListenerSet = new HashSet<>();
 
     private HashSet<PayloadListener> payloadListenersSet = new HashSet<>();
 
-    public NearbyConnectionsManager(Context context) {
+    public WorkerConnectionManagerService(Context context) {
         this.context = context;
         this.connectionLifecycleCallback = new ConnectionLifecycleCallback() {
             @Override
             public void onConnectionInitiated(@NonNull String endpointId, @NonNull ConnectionInfo connectionInfo) {
-                for (ClientConnectionListener clientConnectionListener : clientConnectionListenerSet) {
+                for (WorkerConnectionListener workerConnectionListener : workerConnectionListenerSet) {
                     try {
-                        clientConnectionListener.onConnectionInitiated(endpointId, connectionInfo);
+                        workerConnectionListener.onConnectionInitiated(endpointId, connectionInfo);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -47,9 +46,9 @@ public class NearbyConnectionsManager {
 
             @Override
             public void onConnectionResult(@NonNull String endpointId, @NonNull ConnectionResolution connectionResolution) {
-                for (ClientConnectionListener clientConnectionListener : clientConnectionListenerSet) {
+                for (WorkerConnectionListener workerConnectionListener : workerConnectionListenerSet) {
                     try {
-                        clientConnectionListener.onConnectionResult(endpointId, connectionResolution);
+                        workerConnectionListener.onConnectionResult(endpointId, connectionResolution);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -59,9 +58,9 @@ public class NearbyConnectionsManager {
             @Override
             public void onDisconnected(@NonNull String endpointId) {
                 Toast.makeText(context, "Disconnected", Toast.LENGTH_SHORT).show();
-                for (ClientConnectionListener clientConnectionListener : clientConnectionListenerSet) {
+                for (WorkerConnectionListener workerConnectionListener : workerConnectionListenerSet) {
                     try {
-                        clientConnectionListener.onDisconnected(endpointId);
+                        workerConnectionListener.onDisconnected(endpointId);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -70,12 +69,12 @@ public class NearbyConnectionsManager {
         };
     }
 
-    public static NearbyConnectionsManager getInstance(Context context) {
-        if (nearbyConnectionsManager == null) {
-            nearbyConnectionsManager = new NearbyConnectionsManager(context);
+    public static WorkerConnectionManagerService getInstance(Context context) {
+        if (workerConnectionManagerService == null) {
+            workerConnectionManagerService = new WorkerConnectionManagerService(context);
         }
 
-        return nearbyConnectionsManager;
+        return workerConnectionManagerService;
     }
 
     public void requestConnection(String endpointId, String clientId) {
@@ -133,9 +132,9 @@ public class NearbyConnectionsManager {
         return false;
     }
 
-    public boolean registerClientConnectionListener(ClientConnectionListener clientConnectionListener) {
-        if (clientConnectionListener != null) {
-            return clientConnectionListenerSet.add(clientConnectionListener);
+    public boolean registerClientConnectionListener(WorkerConnectionListener workerConnectionListener) {
+        if (workerConnectionListener != null) {
+            return workerConnectionListenerSet.add(workerConnectionListener);
         }
         return false;
     }
@@ -148,9 +147,9 @@ public class NearbyConnectionsManager {
     }
 
 
-    public boolean unregisterClientConnectionListener(ClientConnectionListener clientConnectionListener) {
-        if (clientConnectionListener != null) {
-            return clientConnectionListenerSet.remove(clientConnectionListener);
+    public boolean unregisterClientConnectionListener(WorkerConnectionListener workerConnectionListener) {
+        if (workerConnectionListener != null) {
+            return workerConnectionListenerSet.remove(workerConnectionListener);
         }
         return false;
     }

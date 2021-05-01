@@ -5,8 +5,8 @@ import java.io.Serializable;
 public class Worker implements Serializable {
 
     private String endpointId, endpointName;
-    private DeviceStatistics deviceStatistics;
-    private WorkInfo workInfo;
+    private WorkerDeviceStatistics workerDeviceStatistics;
+    private WorkDataStatus workDataStatus;
 
     private int workQuantity;
     private float distanceFromMaster;
@@ -27,20 +27,20 @@ public class Worker implements Serializable {
         this.endpointName = endpointName;
     }
 
-    public WorkInfo getWorkStatus() {
-        return workInfo;
+    public WorkDataStatus getWorkStatus() {
+        return workDataStatus;
     }
 
-    public void setWorkStatus(WorkInfo workStatus) {
-        this.workInfo = workStatus;
+    public void setWorkStatus(WorkDataStatus workStatus) {
+        this.workDataStatus = workStatus;
     }
 
-    public DeviceStatistics getDeviceStats() {
-        return deviceStatistics;
+    public WorkerDeviceStatistics getDeviceStats() {
+        return workerDeviceStatistics;
     }
 
-    public void setDeviceStats(DeviceStatistics deviceStats) {
-        this.deviceStatistics = deviceStats;
+    public void setDeviceStats(WorkerDeviceStatistics deviceStats) {
+        this.workerDeviceStatistics = deviceStats;
     }
 
     public int getWorkAmount() {
