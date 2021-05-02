@@ -261,9 +261,8 @@ public class WorkAllocatorService {
 
         long endTime = System.currentTimeMillis();
         long totalTimeElapsed = endTime - beginTime;
-        WriteToFile.writeTextToFile(context, "exectution_time_of_distributed_approach.txt", false, totalTimeElapsed + " ms");
-        WriteToFile.writeMatrixToFile(context, "matrix1.txt", matrix1);
-        WriteToFile.writeMatrixToFile(context, "matrix2.txt", matrix2);
+        WriteToFile.writeTextToFile(context, "worker_execution_time.txt", false, totalTimeElapsed + " ms");
+        WriteToFile.writeMatrixToFile(context, "Matrix.txt", matrix1);
 
 
         int[][] resultMatrix = new int[rows1][cols1];
@@ -273,7 +272,7 @@ public class WorkAllocatorService {
             }
         }
 
-        WriteToFile.writeMatrixToFile(context, "result_matrix.txt", resultMatrix);
+        WriteToFile.writeMatrixToFile(context, "output_matrix.txt", resultMatrix);
         this.workCallback.onWorkCompleted(totalTimeElapsed);
     }
 

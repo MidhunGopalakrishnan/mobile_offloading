@@ -201,7 +201,7 @@ public class MasterActivity extends AppCompatActivity {
             }
             long endTime = System.currentTimeMillis();
             long totalTime = endTime - startTime;
-            WriteToFile.writeTextToFile(getApplicationContext(), "exec_time_master_alone.txt", false, totalTime + "ms");
+            WriteToFile.writeTextToFile(getApplicationContext(), "master_execution_time.txt", false, totalTime + "ms");
             TextView master = findViewById(R.id.masterTime);
             master.setText("Execution time (Master): " + totalTime + "ms");
         });
